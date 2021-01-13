@@ -64,6 +64,7 @@ def start(update, context):
             og_id = getogfromperson(user_id)
             executescript(f'UPDATE OG SET chat_id = {chat_id} WHERE id = {og_id}')
             register(update, context)
+            return
     context.bot.sendMessage(chat_id, text)
 
 def register(update, context):
