@@ -27,10 +27,11 @@ def help(update, context):
     chat_id = update.effective_chat.id
     if update.message.chat.type == 'private':
         if userexists(chat_id) and haveperms(chat_id, 3): # IC
-            text = '\mainmenu - Brings up the main menu where you have master control over everything!\n'
+            text = '/mainmenu - Brings up the main menu where you have master control over everything!\n'
+            text += '/user <username> <og/station> <clearance level> - Changes the OG/Station and/or clearance level for the user. Level 0: Freshie. Level 1: OGL. Level 2: Station Master.\n'
             text += 'You can lock/unlock QR codes, +/- attempts for quizzes and riddles and +/- points for whichever OG you want.'
         elif userexists(chat_id) and haveperms(chat_id, 2): # Station Master
-            text = '\mainmenu - Brings up the main menu where you interact with the bot!\n\n'
+            text = '/mainmenu - Brings up the main menu where you interact with the bot!\n\n'
             text += 'When an OG arrives at your station, you have to mark their attendance via the main menu.\n\n'
             text += 'After they complete the station, you can pass or fail them via the main menu.'
         else:
