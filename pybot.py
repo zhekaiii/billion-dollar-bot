@@ -7,7 +7,10 @@ from telegram.ext import Updater, Filters, CommandHandler, MessageHandler, Callb
 # Telegram Functions
 from functions import *
 
-import os
+import os, logging
+
+# TODO:
+# Photo for Quiz 1 (mala)
 
 test = False
 if test:
@@ -16,9 +19,14 @@ else:
 	TOKEN = "1537124063:AAHbzWH70hf6Xa-_mRofarNHGubFdzq8VCA" # actual bot
 	PORT = int(os.environ.get('PORT', 5000))
 
-# TODO:
-# Photo for Quiz 1 (mala)
-# Master Control
+# Enable logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def error(update, context):
+    """Log Errors caused by Updates."""
+    logger.warning('Update "%s" caused error "%s"', update, context.error)
 
 def main():
 	updater = Updater(TOKEN, request_kwargs={'read_timeout': 20, 'connect_timeout': 20}, use_context=True)
@@ -40,6 +48,8 @@ def main():
 	dp.add_handler(CommandHandler('ogl', ogl))
 	dp.add_handler(CommandHandler('sm', sm))
 	dp.add_handler(CommandHandler('head', head))
+
+	dp.add_error_handler(error)
 
 	if test:
 		updater.start_polling()
