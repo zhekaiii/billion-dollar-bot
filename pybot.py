@@ -28,9 +28,6 @@ def error(update, context):
     """Log Errors caused by Updates."""
     logger.warning('Update "%s" caused error "%s"', update, context.error)
 
-def start(update, context):
-    update.message.reply_text(update.message.text)
-
 def main():
 	updater = Updater(TOKEN, request_kwargs={'read_timeout': 20, 'connect_timeout': 20}, use_context=True)
 	dp = updater.dispatcher

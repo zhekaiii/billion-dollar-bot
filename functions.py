@@ -319,8 +319,8 @@ def button(update, context):
             return
         if id == 9:
             markup.append([InlineKeyboardButton('True', callback_data = 'correct.r9.True'), InlineKeyboardButton('False', callback_data = 'wrong.r9.False')])
-                file_id = 'AgACAgUAAxkDAAIEPl_zCAt6Gnbwt0aMUAABFSeHiEVtpAACOKwxG-3nmVdhp2yhkTvWi-HFy2x0AAMBAAMCAANtAAPgxQUAAR4E' if test else 'AgACAgUAAxkDAAMEX_6KyY15c5BaYAwT8FUI9UvssEYAAomsMRtAtflXlQf_MyaQyBSVJcJvdAADAQADAgADbQADIisAAh4E'
-                context.bot.send_photo(chat_id, file_id, text, reply_markup = InlineKeyboardMarkup(markup), parse_mode = ParseMode.HTML)
+            file_id = 'AgACAgUAAxkDAAIEPl_zCAt6Gnbwt0aMUAABFSeHiEVtpAACOKwxG-3nmVdhp2yhkTvWi-HFy2x0AAMBAAMCAANtAAPgxQUAAR4E' if test else 'AgACAgUAAxkDAAMEX_6KyY15c5BaYAwT8FUI9UvssEYAAomsMRtAtflXlQf_MyaQyBSVJcJvdAADAQADAgADbQADIisAAh4E'
+            context.bot.send_photo(chat_id, file_id, text, reply_markup = InlineKeyboardMarkup(markup), parse_mode = ParseMode.HTML)
             return
         elif id == 11:
             markup += [
