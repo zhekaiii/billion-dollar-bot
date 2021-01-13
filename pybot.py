@@ -55,7 +55,7 @@ def main():
 		updater.start_polling()
 	else:
 		updater.start_webhook(listen='0.0.0.0', port = int(PORT), url_path=TOKEN)
-		updater.bot.setWebhook('https://peaceful-bastion-00101.herokuapp.com/' + TOKEN)
+		updater.bot.setWebhook('https://quiet-tundra-35972.herokuapp.com/' + TOKEN)
 	updater.idle()
 
 if __name__ == '__main__':
