@@ -12,7 +12,7 @@ import os, logging
 # TODO:
 # Photo for Quiz 1 (mala)
 
-test = False
+test = True
 if test:
 	TOKEN = "1422003135:AAFM-i9eufmQxFKvzuOjO4xuPdT2cEujCvk" # test bot
 else:
@@ -23,6 +23,9 @@ else:
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+ic1_id = 129464681 #chat_id of Zhekai
+ic2_id = 129464681 #chat_id of Zhekai
 
 def error(update, context):
     """Log Errors caused by Updates."""
@@ -36,6 +39,7 @@ def main():
 	dp.add_handler(CommandHandler('register', register))
 	dp.add_handler(CommandHandler('mainmenu', mainmenu))
 	dp.add_handler(CommandHandler('help', help))
+	dp.add_handler(CommandHandler('user', changeuser))
 	dp.add_handler(MessageHandler(Filters.photo, decode_qr))
 	dp.add_handler(MessageHandler(Filters.reply, confirmans))
 	dp.add_handler(CallbackQueryHandler(button))

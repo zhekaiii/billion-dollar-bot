@@ -20,7 +20,7 @@ from random import shuffle
 
 from db import *
 
-from pybot import test
+from pybot import test, ic1_id, ic2_id
 
 def help(update, context):
     # TODO: Help text for Station Masters
@@ -144,8 +144,6 @@ def mainmenu(update, context):
     context.bot.sendMessage(chat_id, text, reply_markup = keyboard)
 
 def button(update, context):
-    ic1_id = 129464681 #chat_id of Zhekai
-    ic2_id = 129464681 #chat_id of Zhekai
     #print(update.callback_query)
     chat_id = update.effective_chat.id
     user = update.effective_user
@@ -714,6 +712,24 @@ def notifysm(og_id, game_id, context):
 
 def now():
     return int(datetime.timestamp(datetime.now()))
+
+def changeuser(update, context):
+    chat_id = update.message.chat_id
+    user_id = update.effective_user.id
+    if not (userexists(user_id) and haveperms(user_id, 3)):
+        return
+    split = update.message.text.split(' ')
+    if len(split) == 4: # /user {username} {new_og} {new_perms}
+        if split[2].isnumeric() and split[3].isnumeric() and int(split[3]) in [0, 1, 2]:
+            username = split[1].strip('@')
+            for cid in getchatids():
+                if username == context.bot.getChat(cid).username:
+                    executescript(f'UPDATE Member SET og_id = {split[2]}, perms = {split[3]} WHERE chat_id = {cid}')
+                    context.bot.sendMessage(chat_id, f'@{username} is now {"a member of OG" if split[3] == "0" else ("an OGL of OG" if split[3] == "1" else "the station master of station")} {split[2]}!')
+                    return
+            context.bot.sendMessage(chat_id, f'@{username} does not exist in the database!')
+            return
+    context.bot.sendMessage(chat_id, 'Wrong parameters!')
 
 def unlockall(update, context):
     for i in range(1, 16):

@@ -1,4 +1,5 @@
 import sqlite3
+from pybot import ic1_id, ic2_id
 
 db = 'db.sqlite'
 
@@ -104,7 +105,9 @@ def resetdb(a = None, b = None):
 
     for house_id in range(1, 6):
         for og in range(4):
-            cur.execute('INSERT INTO OG (house_id) VALUES ({})'.format(house_id))
+            cur.execute(f'INSERT INTO OG (house_id) VALUES ({house_id})')
+    for i in [ic1_id, ic2_id]:
+        cur.execute(f'INSERT OR IGNORE INTO Member (chat_id, og_id, perms) VALUES ({i}, 0, 3)')
 
     con.commit()
     cur.close()
@@ -322,3 +325,12 @@ def getqueueforog(og_id): # gets the stations queued by an OG
     res = cur.fetchall()
     cur.close()
     return res
+
+def getchatids():
+    global db
+    con = sqlite3.connect(db)
+    cur = con.cursor()
+    cur.execute(f'SELECT chat_id from Member')
+    res = cur.fetchall()
+    cur.close()
+    return [i[0] for i in res]
