@@ -547,8 +547,9 @@ def button(update, context):
         own_queue = getqueueforog(og_id)
         station_queue = getqueueforgame(id)
         markup.append([InlineKeyboardButton('Refresh', callback_data = f'g{id}')])
+        text = f'<u>Station {id}: {rewards} Points</u>\n'
         if station_queue:
-            text = f'<u>Current queue for Station {id}\n\n</u>'
+            text += '<u>Current queue:\n\n</u>'
             for og, priority in station_queue:
                 temp = f'OG {og}'
                 if priority == 0:
@@ -557,7 +558,7 @@ def button(update, context):
                     temp = f'<b>{temp}</b>'
                 text += temp + '\n'
         else:
-            text = f'The queue for Station {id} is empty'
+            text = 'The queue is empty!'
         if own_queue: # if your queue has something
             if own_queue[0][0] == id: # you are queued for that station
                 if state == 2:
