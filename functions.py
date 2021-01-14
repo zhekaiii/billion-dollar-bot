@@ -549,7 +549,7 @@ def button(update, context):
         markup.append([InlineKeyboardButton('Refresh', callback_data = f'g{id}')])
         text = f'<u>Station {id}: {rewards} Points</u>\n'
         if station_queue:
-            text += '<u>Current queue:\n\n</u>'
+            text += 'Current queue:\n\n'
             for og, priority in station_queue:
                 temp = f'OG {og}'
                 if priority == 0:
