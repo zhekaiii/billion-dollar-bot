@@ -204,7 +204,7 @@ def button(update, context):
         else:
             markup = [[InlineKeyboardButton('Back', callback_data = f'{".".join(split[:-1])}')]]
             action = int(split[2])
-            if action == 1:
+            if action == 1: # +/- Points
                 pts = getpoints(og)
                 if len(split) == 3:
                     text = f'How many points? OG {og} now has {pts} Favour Points.'
@@ -226,7 +226,7 @@ def button(update, context):
                         [InlineKeyboardButton('-2', callback_data = f'master.{og}.1.-2'), InlineKeyboardButton('+2', callback_data = f'master.{og}.1.2')],
                         [InlineKeyboardButton('-5', callback_data = f'master.{og}.1.-5'), InlineKeyboardButton('+5', callback_data = f'master.{og}.1.5')]
                     ]
-            elif action == 2:
+            elif action == 2: # Lock/Unlock
                 if len(split) == 3:
                     text = 'Choose a category:'
                     markup += [
@@ -252,15 +252,15 @@ def button(update, context):
                             text = f'What would you like to do for {["Station", "Riddle", "Quiz"][int(split[3]) - 1]} {id}? '
                             if have_attempts:
                                 text += f'{attempts} attempt{"s" if attempts != 1 else ""} remaining.' if (attempts >= 0 and attempts < 100) else ('has been completed.' if attempts == 100 else 'is locked.')
-                            if attempts == -1:
+                            if attempts == -1: # Locked
                                 markup.append([InlineKeyboardButton('Unlock', callback_data = f'{callback_data}.unlock')])
-                            elif attempts == 100:
-                                markup.append([InlineKeyboardButton('Lock', callback_data = f'{callback_data}.lock')])
-                            else:
-                                if have_attempts:
+                            if attempts < 100: # Not Completed
+                                if have_attempts and attempts > -1:
                                     markup.append([InlineKeyboardButton('+1 Attempt', callback_data = f'{callback_data}.1')])
                                     if attempts > 0:
                                         markup[1].append(InlineKeyboardButton('-1 Attempt', callback_data = f'{callback_data}.-1'))
+                                markup.append([InlineKeyboardButton('Complete', callback_data = f'{callback_data}.complete')])
+                            if attempts > -1: # Unlocked / Completed
                                 markup.append([InlineKeyboardButton('Lock', callback_data = f'{callback_data}.lock')])
                         else:
                             stuff = split[-1]
@@ -274,11 +274,24 @@ def button(update, context):
                                 elif cat == 'q':
                                     unlockquiz(id, update, context)
                             elif stuff == 'lock':
-                                games_queued = [i[0] for i in getqueueforog(og)]
-                                for game_id in games_queued:
-                                    clearqueue(og, game_id, context)
+                                if cat == 'g':
+                                    clearqueue(og, id, context)
+                                    games_queued = [i[0] for i in getqueueforog(og)]
+                                    if games_queued:
+                                        queue_game(og, games_queue[0], context)
                                 executescript(f'UPDATE OG SET {cat}{id} = -1 WHERE id = {og}')
                                 context.bot.sendMessage(chat_id, f'{["Station", "Riddle", "Quiz"][int(split[3]) - 1]} {id} for OG {og} locked!')
+                            elif stuff == 'complete':
+                                rewards = getrewards(f'{cat}{id}')
+                                if cat == 'g':
+                                    if attempts > -1:
+                                        clearqueue(og, id, context)
+                                        games_queued = [i[0] for i in getqueueforog(og)]
+                                        if games_queued:
+                                            queue_game(og, games_queue[0], context)
+                                addpts(og, rewards)
+                                executescript(f'UPDATE OG SET {cat}{id} = 100 WHERE id = {og}')
+                                context.bot.sendMessage(chat_id, f'{["Station", "Riddle", "Quiz"][int(split[3]) - 1]} {id} for OG {og} completed!')
                             else:
                                 amt = int(stuff)
                                 attempts += amt
