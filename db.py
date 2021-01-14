@@ -257,7 +257,7 @@ def getogchatid(og_id):
     cur.execute(f'SELECT chat_id FROM OG WHERE id = {og_id}')
     res = cur.fetchone()
     cur.close()
-    return res[0]
+    return res[0] if res else res
 
 def getsmchatid(game_id):
     global db

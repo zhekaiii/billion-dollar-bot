@@ -66,6 +66,15 @@ def start(update, context):
             text = 'Only an authorized personel can do that!'
         else:
             og_id = getogfromperson(user_id)
+            if not (getogchatid(og_id) != None and getogchatid(og_id) == chat_id):
+                if getogchatid(og_id) and getogchatid(og_id) != chat_id:
+                    text = f'Warning! Another group chat has been registered under OG {og_id}. Overriding. {getogchatid(og_id)}'
+                elif getogfromgroup(chat_id) and getogfromgroup(chat_id) != og_id:
+                    text = f'This group chat has been registered as OG {getogfromgroup(chat_id)}. Overriding.'
+                    executescript(f'UPDATE OG SET chat_id = NULL WHERE id = {getogfromgroup(chat_id)}')
+                elif getogchatid(og_id) is None:
+                    text = 'Group chat registered successfully.'
+                context.bot.sendMessage(chat_id, text)
             executescript(f'UPDATE OG SET chat_id = {chat_id} WHERE id = {og_id}')
             register(update, context)
             return
