@@ -25,7 +25,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 ic1_id = 129464681 #chat_id of Zhekai
-ic2_id = 129464681 #chat_id of Zhekai
+ic2_id = 468173002 #chat_id of Jeremy
 
 def error(update, context):
     """Log Errors caused by Updates."""
