@@ -104,7 +104,7 @@ def register(update, context):
             temp = []
             for j in range(1, 5 if og else 6):
                 num = i * (4 if og else 5) + j
-                temp.append(InlineKeyboardButton(str(og_ab(num) if og and ab else num), callback_data = f'register.{num}.{1 if og else 2}'))
+                temp.append(InlineKeyboardButton(og_ab(num) if og else num, callback_data = f'register.{num}.{1 if og else 2}'))
             markup.append(temp)
         keyboard = InlineKeyboardMarkup(markup)
     elif not groupregistered(chat_id):
@@ -168,19 +168,19 @@ def button(update, context):
     callback_data = update.callback_query['data']
     original_text = update.callback_query['message']['text'] or update.callback_query['message']['caption']
     if callback_data.startswith('register'):
-        og_id = callback_data.split('.')[1]
-        perms = callback_data.split('.')[2]
+        og_id = int(callback_data.split('.')[1])
+        perms = int(callback_data.split('.')[2])
         if userexists(user.id) and perms == 0:
             text = 'You have already registered!'
         else:
             executescript(f'''DELETE FROM Member WHERE chat_id = {user.id};
             INSERT INTO Member (chat_id, og_id, perms) VALUES ({user.id}, {og_id}, {perms})''')
             text = 'You have successfully registered! '
-            if perms == '0':
+            if perms == 0:
                 text += f'You are from OG {og_ab(og_id)}!'
-            elif perms == '1':
+            elif perms == 1:
                 text += f'You are the OGL of OG {og_ab(og_id)}!'
-            elif perms == '2':
+            elif perms == 2:
                 text += f'You are the Station Master of Station {og_id}!'
             else:
                 text += 'You are the big boss. You have Master Control!'
