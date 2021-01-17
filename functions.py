@@ -89,17 +89,17 @@ def register(update, context):
     if type == 'private':
         text = 'This command only works in group chats!'
     elif userexists(user_id) and haveperms(user_id, 3):
-        if update.message.text == '/register':
+        if len(update.message.text.split(' ')) == 1:
             return
-        og = True if update.message.text == '/register ogl' else (False if update.message.text == '/register sm' else None)
+        og = True if update.message.text.split(' ')[1] == 'ogl' else (False if update.message.text.split(' ')[1] == 'sm' else None)
         if og is None: return
         text = 'Click on the OG you\'re leading!' if og else 'Click on the station you are in charge of!'
         text += ' Remember to PM me /start first before you register or you won\'t be able to receive my messages!'
         markup = []
-        for i in range(10 if og and ab else (4 if og else 2)):
+        for i in range(10 if og and ab else (5 if og else 2)):
             temp = []
-            for j in range(1, 4 if og and ab else (5 if og else 6)):
-                num = i * (10 if og and ab else (4 if og else 5)) + j
+            for j in range(1, 5 if og else 6):
+                num = i * (4 if og else 5) + j
                 temp.append(InlineKeyboardButton(str(og_ab(num) if og and ab else num), callback_data = f'register.{num}.{1 if og else 2}'))
             markup.append(temp)
         keyboard = InlineKeyboardMarkup(markup)
@@ -146,11 +146,11 @@ def mainmenu(update, context):
             text = f'Hello, Station {getogfromperson(chat_id)} Master {full_name(update.effective_user)}. What would you like to do?'
     else: # Head
         markup = []
-        for i in range(5):
+        for i in range(10 if ab else 5):
             temp = []
             for j in range(1, 5):
                 num = i * 4 + j
-                temp.append(InlineKeyboardButton(str(num), callback_data = f'master.{num}'))
+                temp.append(InlineKeyboardButton(og_ab(num), callback_data = f'master.{num}'))
             markup.append(temp)
         keyboard = InlineKeyboardMarkup(markup)
         text = 'What do you need to do for which OG?'
