@@ -20,7 +20,7 @@ from random import shuffle
 
 from db import *
 
-from pybot import test, ic1_id, ic2_id
+from pybot import test, ab, ic1_id, ic2_id
 
 def help(update, context):
     # TODO: Help text for Station Masters
@@ -68,7 +68,7 @@ def start(update, context):
             og_id = getogfromperson(user_id)
             if not (getogchatid(og_id) != None and getogchatid(og_id) == chat_id):
                 if getogchatid(og_id) and getogchatid(og_id) != chat_id:
-                    text = f'Warning! Another group chat has been registered under OG {og_id}. Overriding. {getogchatid(og_id)}'
+                    text = f'Warning! Another group chat has been registered under OG {og_ab(og_id)}. Overriding. {getogchatid(og_id)}'
                 elif getogfromgroup(chat_id) and getogfromgroup(chat_id) != og_id:
                     text = f'This group chat has been registered as OG {getogfromgroup(chat_id)}. Overriding.'
                     executescript(f'UPDATE OG SET chat_id = NULL WHERE id = {getogfromgroup(chat_id)}')
@@ -96,11 +96,11 @@ def register(update, context):
         text = 'Click on the OG you\'re leading!' if og else 'Click on the station you are in charge of!'
         text += ' Remember to PM me /start first before you register or you won\'t be able to receive my messages!'
         markup = []
-        for i in range(5 if og else 2):
+        for i in range(10 if og and ab else (4 if og else 2)):
             temp = []
-            for j in range(1, 5 if og else 6):
-                num = i * (4 if og else 5) + j
-                temp.append(InlineKeyboardButton(str(num), callback_data = f'register.{num}.{1 if og else 2}'))
+            for j in range(1, 4 if og and ab else (5 if og else 6)):
+                num = i * (10 if og and ab else (4 if og else 5)) + j
+                temp.append(InlineKeyboardButton(str(og_ab(num) if og and ab else num), callback_data = f'register.{num}.{1 if og else 2}'))
             markup.append(temp)
         keyboard = InlineKeyboardMarkup(markup)
     elif not groupregistered(chat_id):
@@ -133,7 +133,7 @@ def mainmenu(update, context):
                     [InlineKeyboardButton('Quizzes', callback_data = 'quiz')],
                 ]
             )
-            text = f'Hello, OG {getogfromgroup(chat_id)}. What would you like to do?'
+            text = f'Hello, OG {og_ab(getogfromgroup(chat_id))}. What would you like to do?'
     elif not haveperms(user_id, 3): # Station Master
         if update.effective_chat.type == 'private':
             keyboard = InlineKeyboardMarkup(
@@ -173,9 +173,9 @@ def button(update, context):
             INSERT INTO Member (chat_id, og_id, perms) VALUES ({user.id}, {og_id}, {perms})''')
             text = 'You have successfully registered! '
             if perms == '0':
-                text += f'You are from OG {og_id}!'
+                text += f'You are from OG {og_ab(og_id)}!'
             elif perms == '1':
-                text += f'You are the OGL of OG {og_id}!'
+                text += f'You are the OGL of OG {og_ab(og_id)}!'
             elif perms == '2':
                 text += f'You are the Station Master of Station {og_id}!'
             else:
@@ -196,7 +196,7 @@ def button(update, context):
         og = int(split[1])
         markup = [[InlineKeyboardButton('Back', callback_data = 'mainmenu')]]
         if len(split) == 2:
-            text = f'What do you want to do with OG {og}?'
+            text = f'What do you want to do with OG {og_ab(og)}?'
             markup += [
                 [InlineKeyboardButton('+/- Points', callback_data = f'{callback_data}.1')],
                 [InlineKeyboardButton('Lock/Unlock QR', callback_data = f'{callback_data}.2')]
@@ -207,7 +207,7 @@ def button(update, context):
             if action == 1: # +/- Points
                 pts = getpoints(og)
                 if len(split) == 3:
-                    text = f'How many points? OG {og} now has {pts} Favour Points.'
+                    text = f'How many points? OG {og_ab(og)} now has {pts} Favour Points.'
                     markup += [
                         [InlineKeyboardButton('-1', callback_data = f'{callback_data}.-1'), InlineKeyboardButton('+1', callback_data = f'{callback_data}.1')],
                         [InlineKeyboardButton('-2', callback_data = f'{callback_data}.-2'), InlineKeyboardButton('+2', callback_data = f'{callback_data}.2')],
@@ -219,8 +219,8 @@ def button(update, context):
                     pts = amt + pts
                     pts = 0 if pts < 0 else pts
                     addpts(og, amt)
-                    context.bot.sendMessage(chat_id, f'{"" if amt < 0 else "+"}{amt} Favour Points for OG {og}! They now have {pts} points!')
-                    text = f'How many points? OG {og} now has {pts} Favour Points.'
+                    context.bot.sendMessage(chat_id, f'{"" if amt < 0 else "+"}{amt} Favour Points for OG {og_ab(og)}! They now have {pts} points!')
+                    text = f'How many points? OG {og_ab(og)} now has {pts} Favour Points.'
                     markup += [
                         [InlineKeyboardButton('-1', callback_data = f'master.{og}.1.-1'), InlineKeyboardButton('+1', callback_data = f'master.{og}.1.1')],
                         [InlineKeyboardButton('-2', callback_data = f'master.{og}.1.-2'), InlineKeyboardButton('+2', callback_data = f'master.{og}.1.2')],
@@ -251,7 +251,7 @@ def button(update, context):
                             have_attempts = True if (cat != 'g' and (cat == 'q' or id in [1,2,3,4,9,11,13,14,15])) else False
                             text = f'What would you like to do for {["Station", "Riddle", "Quiz"][int(split[3]) - 1]} {id}? '
                             if have_attempts:
-                                text += f'{attempts} attempt{"s" if attempts != 1 else ""} remaining.' if (attempts >= 0 and attempts < 100) else ('has been completed.' if attempts == 100 else 'is locked.')
+                                text += f'{attempts} attempt{"s" if attempts != 1 else ""} remaining.' if (attempts >= 0 and attempts < 100) else ('has been completed.' if attempts > 5 else 'is locked.')
                             if attempts == -1: # Locked
                                 markup.append([InlineKeyboardButton('Unlock', callback_data = f'{callback_data}.unlock')])
                             if attempts < 100: # Not Completed
@@ -280,7 +280,7 @@ def button(update, context):
                                     if games_queued:
                                         queue_game(og, games_queue[0], context)
                                 executescript(f'UPDATE OG SET {cat}{id} = -1 WHERE id = {og}')
-                                context.bot.sendMessage(chat_id, f'{["Station", "Riddle", "Quiz"][int(split[3]) - 1]} {id} for OG {og} locked!')
+                                context.bot.sendMessage(chat_id, f'{["Station", "Riddle", "Quiz"][int(split[3]) - 1]} {id} for OG {og_ab(og)} locked!')
                             elif stuff == 'complete':
                                 rewards = getrewards(f'{cat}{id}')
                                 if cat == 'g':
@@ -291,12 +291,12 @@ def button(update, context):
                                             queue_game(og, games_queue[0], context)
                                 addpts(og, rewards)
                                 executescript(f'UPDATE OG SET {cat}{id} = 100 WHERE id = {og}')
-                                context.bot.sendMessage(chat_id, f'{["Station", "Riddle", "Quiz"][int(split[3]) - 1]} {id} for OG {og} completed!')
+                                context.bot.sendMessage(chat_id, f'{["Station", "Riddle", "Quiz"][int(split[3]) - 1]} {id} for OG {og_ab(og)} completed!')
                             else:
                                 amt = int(stuff)
                                 attempts += amt
                                 executescript(f'UPDATE OG SET {cat}{id} = {attempts} WHERE id = {og}')
-                                context.bot.sendMessage(chat_id, f'{"" if amt < 0 else "+"}{amt} attempt for {["Station", "Riddle", "Quiz"][int(split[3]) - 1]} {id} for OG {og}!')
+                                context.bot.sendMessage(chat_id, f'{"" if amt < 0 else "+"}{amt} attempt for {["Station", "Riddle", "Quiz"][int(split[3]) - 1]} {id} for OG {og_ab(og)}!')
                             mainmenu(update, context)
                             return
         context.bot.sendMessage(chat_id, text, reply_markup = InlineKeyboardMarkup(markup))
@@ -313,7 +313,7 @@ def button(update, context):
             for j in range(1, 6):
                 riddlenum = str(i * 5 + j)
                 attempts = checkqr(og_id, 'r{}'.format(riddlenum))
-                buttontext = '🔒' if attempts == -1 else ('✅' if attempts == 100 else ('❌' if attempts == 0 else riddlenum))
+                buttontext = '🔒' if attempts == -1 else ('✅' if attempts > 5 else ('❌' if attempts == 0 else riddlenum))
                 temp.append(InlineKeyboardButton(buttontext, callback_data = 'nothing' if attempts == -1 else 'r{}'.format(riddlenum)))
             markup.append(temp)
         text = '''Choose a riddle!
@@ -335,7 +335,7 @@ def button(update, context):
             text += f' (Attempts left: {attempts})'
         text += f' [{rewards} Point' + ('s' if rewards > 1 else '') + f']</b></u>\n\n{getquestion(f"r{id}")}'
 
-        if attempts == 0 or attempts == 100:
+        if attempts == 0 or attempts > 5:
             if id == 9:
                 file_id = 'AgACAgUAAxkDAAIEPl_zCAt6Gnbwt0aMUAABFSeHiEVtpAACOKwxG-3nmVdhp2yhkTvWi-HFy2x0AAMBAAMCAANtAAPgxQUAAR4E' if test else 'AgACAgUAAxkDAAMEX_6KyY15c5BaYAwT8FUI9UvssEYAAomsMRtAtflXlQf_MyaQyBSVJcJvdAADAQADAgADbQADIisAAh4E'
                 context.bot.send_photo(chat_id, file_id, text, reply_markup = InlineKeyboardMarkup(markup), parse_mode = ParseMode.HTML)
@@ -363,7 +363,7 @@ def button(update, context):
             for j in range(1, 6):
                 quiznum = str(i * 5 + j)
                 attempts = checkqr(og_id, f'q{quiznum}')
-                buttontext = '🔒' if attempts == -1 else ('✅' if attempts == 100 else ('❌' if attempts == 0 else quiznum))
+                buttontext = '🔒' if attempts == -1 else ('✅' if attempts > 5 else ('❌' if attempts == 0 else quiznum))
                 temp.append(InlineKeyboardButton(buttontext, callback_data = 'nothing' if attempts == -1 else f'q{quiznum}'))
             markup.append(temp)
         text = '''Choose a quiz!
@@ -383,7 +383,7 @@ def button(update, context):
         text = f'<u><b>Quiz {id} '
         text += f'(Attempts left: {attempts}) ' if attempts < 100 else ''
         text += f'[{rewards} Point' + ('s' if rewards > 1 else '') + f']</b></u>\n\n{getquestion(f"q{id}")}'
-        if attempts == 0 or attempts == 100:
+        if attempts == 0 or attempts > 5:
             if id == 7:
                 file_id = 'AgACAgUAAxkDAAIEqV_zOliCZ7mYct7I01uzeaE-J8pTAALSrDEb7eeZV-cOO5gPgL7x157CbHQAAwEAAwIAA20AAyjSBQABHgQ' if test else 'AgACAgUAAxkDAAMCX_6Kr8CnjioZ51RdqI0BpIWJtNwAAoisMRtAtflX1eM3DFfUeaAHRiRtdAADAQADAgADbQADk4UCAAEeBA'
                 context.bot.send_photo(chat_id, file_id, text, reply_markup = InlineKeyboardMarkup(markup), parse_mode = ParseMode.HTML)
@@ -416,6 +416,9 @@ def button(update, context):
     elif callback_data.startswith('correct'):
         cat = callback_data.split('.')[1][0]
         id = int(callback_data.split('.')[1][1:])
+        attempts = checkqr(og_id, f'{cat}{id}')
+        if attempts > 5 or attempts == 0:
+            return
         reward = getrewards(f'{cat}{id}')
         ans = callback_data.split('.')[2]
         executescript(f'UPDATE OG SET {cat}{id} = 100 WHERE id = {og_id}')
@@ -426,6 +429,9 @@ def button(update, context):
     elif callback_data.startswith('wrong'):
         cat = callback_data.split('.')[1][0]
         id = int(callback_data.split('.')[1][1:])
+        attempts = checkqr(og_id, f'{cat}{id}')
+        if attempts > 5 or attempts == 0:
+            return
         if (cat == 'r' and id in [1,2,3,4,9,11,13,14,15]) or cat == 'q':
             attempts = checkqr(getogfromgroup(chat_id), '{}{}'.format(cat, id)) - 1
             executescript('UPDATE OG SET {}{} = {} WHERE id = {}'.format(cat, id, attempts, og_id))
@@ -438,14 +444,16 @@ def button(update, context):
     elif callback_data.startswith('sendans'):
         id = callback_data.split('.')[1]
         answering_og = callback_data.split('.')[2]
-        ans = 'Riddle ' + id
-        ans += '\n' + 'OG ' + answering_og
-        ans += '\n' + original_text.split('\n')[1]
+        attempts = checkqr(answering_og, f'{cat}{id}')
+        ans = f'<u>Riddle {id}</u>\n'
+        ans += getquestion(f'{cat}{id}')
+        ans += f'\nOG {og_ab(answering_og)}'
+        ans += '\nAnswer: ' + original_text.split('\n')[1]
         keyboard = InlineKeyboardMarkup([[
             InlineKeyboardButton('Accept', callback_data = 'accept.{}.{}'.format(id, answering_og)),
             InlineKeyboardButton('Reject', callback_data = 'reject.{}.{}'.format(id, answering_og))
         ]])
-        context.bot.sendMessage(ic1_id, ans, reply_markup = keyboard)
+        context.bot.sendMessage(ic1_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML)
         context.bot.sendMessage(chat_id, original_text)
         context.bot.sendMessage(chat_id, 'Answer sent! Please wait for the response.')
         mainmenu(update, context)
@@ -456,12 +464,12 @@ def button(update, context):
         pts = getrewards(f'r{id}')
         addpts(answering_og, pts)
         context.bot.sendMessage(chat_id, original_text + '\nAnswer accepted!')
-        context.bot.sendMessage(getogchatid(answering_og), 'OG {}, your answer for Riddle {} has been accepted!'.format(answering_og, id))
+        context.bot.sendMessage(getogchatid(answering_og), 'OG {}, your answer for Riddle {} has been accepted!'.format(og_ab(answering_og), id))
         context.bot.sendMessage(getogchatid(answering_og), f'You gained {pts} Favour Points, you now have {getpoints(answering_og)} points!')
     elif callback_data.startswith('reject'):
         id = int(callback_data.split('.')[1])
         answering_og = callback_data.split('.')[2]
-        text = f'OG {answering_og}, your answer for Riddle {id} has been rejected! 😵'
+        text = f'OG {og_ab(answering_og)}, your answer for Riddle {id} has been rejected! 😵'
         if id in [1,2,3,4,11,13,14,15]:
             attempts = checkqr(answering_og, f'r{id}') - 1
             executescript('UPDATE OG SET r{} = {} WHERE id = {}'.format(id, attempts, answering_og))
@@ -473,7 +481,7 @@ def button(update, context):
         queue = getqueueforgame(station)
         text = '<b><u>Queue:</u></b> (Doesn\'t update automatically)\n\n'
         for og, priority in queue:
-            text += f'OG {og}'
+            text += f'OG {og_ab(og)}'
             if priority == 0:
                 text += ' (Currently playing)'
             text += '\n'
@@ -486,10 +494,10 @@ def button(update, context):
         if queue:
             playing_og = queue[0][0]
             if queue[0][1] == 1:
-                text = f'OG {playing_og} is now playing your station.'
+                text = f'OG {og_ab(playing_og)} is now playing your station.'
                 executescript(f'UPDATE Queue SET queue = 0, time = {now()} WHERE og_id = {playing_og} AND game_id = {station}')
             elif queue[0][1] == 0:
-                text = f'OG {playing_og} is already playing your station!'
+                text = f'OG {og_ab(playing_og)} is already playing your station!'
         else:
             text = 'There are no OGs queuing for your station!'
         context.bot.sendMessage(chat_id, text, reply_markup = keyboard)
@@ -499,7 +507,7 @@ def button(update, context):
         queue = getqueueforgame(station)
         if queue:
             if queue[0][1] == 0:
-                text = f'Finish OG {queue[0][0]}\'s session at your station?'
+                text = f'Finish OG {og_ab(queue[0][0])}\'s session at your station?'
                 markup.append([InlineKeyboardButton('Pass', callback_data = 'pass'), InlineKeyboardButton('Fail', callback_data = 'fail')])
             elif queue[0][1] != 0:
                 text = 'You have not marked attendance for the first OG in your queue!'
@@ -516,7 +524,7 @@ def button(update, context):
         addpts(playing_og, reward)
         executescript(f'UPDATE OG SET g{station} = 100 WHERE id = {playing_og}')
         context.bot.sendMessage(getogchatid(playing_og), f'You completed Station {station} and got {reward} Favour Points! You now have {getpoints(playing_og)} points!')
-        context.bot.sendMessage(chat_id, f'OG {playing_og} passed!', reply_markup = keyboard)
+        context.bot.sendMessage(chat_id, f'OG {og_ab(playing_og)} passed!', reply_markup = keyboard)
         og_queue = getqueueforog(playing_og)
         if og_queue:
             queue_game(playing_og, og_queue[0][0], context)
@@ -528,7 +536,7 @@ def button(update, context):
         clearqueue(playing_og, station, context)
         executescript(f'UPDATE OG SET g{station} = 2 WHERE id = {playing_og}')
         context.bot.sendMessage(getogchatid(playing_og), f'You failed to complete Station {station}... You can try again later by re-queuing for that station!')
-        context.bot.sendMessage(chat_id, f'OG {playing_og} failed!', reply_markup = keyboard)
+        context.bot.sendMessage(chat_id, f'OG {og_ab(playing_og)} failed!', reply_markup = keyboard)
         og_queue = getqueueforog(playing_og)
         if og_queue:
             queue_game(playing_og, og_queue[0][0], context)
@@ -540,8 +548,8 @@ def button(update, context):
             for j in range(1, 6):
                 game_id = i * 5 + j
                 attempts = checkqr(og_id, f'g{game_id}')
-                buttontext = '🔒' if attempts == -1 else ('✅' if attempts == 100 else ('‼️' if queue and queue[0][0] == game_id else f'{game_id}'))
-                temp.append(InlineKeyboardButton(buttontext, callback_data = 'nothing' if attempts == 100 or attempts == -1 else f'g{game_id}'))
+                buttontext = '🔒' if attempts == -1 else ('✅' if attempts > 5 else ('‼️' if queue and queue[0][0] == game_id else f'{game_id}'))
+                temp.append(InlineKeyboardButton(buttontext, callback_data = 'nothing' if attempts > 5 or attempts == -1 else f'g{game_id}'))
             markup.append(temp)
         text = '''Choose a station! Click on the station you are queuing for to view the queue. Click on a station you have failed to re-queue.
 
@@ -564,7 +572,7 @@ def button(update, context):
         if station_queue:
             text += 'Current queue:\n\n'
             for og, priority in station_queue:
-                temp = f'OG {og}'
+                temp = f'OG {og_ab(og)}'
                 if priority == 0:
                     temp += ' (Currently playing)'
                 if og == og_id:
@@ -594,10 +602,12 @@ def decode_qr(update, context):
     if not userexists(chat_id):
         context.bot.sendMessage(chat_id, 'Please register yourself in your respective Telegram Group before you start sending QR codes!')
         return
+    if not haveperms(chat_id, 1): # Level 0 cannot send QR codes
+        context.bot.sendMessage(chat_id, 'Only OGLs can send me QR codes!')
+        return
     if haveperms(chat_id, 2): # Level 2 clearance or higher means not in any OG, so no need scan QR code
         context.bot.sendMessage(chat_id, 'You don\'t belong to any OGs! You don\'t need to send me QR codes!')
         return
-
     if update.message.photo:
         id_img = update.message.photo[-1].file_id
     else:
@@ -707,7 +717,7 @@ def clearqueue(og_id, game_id, context):
     if len(queue):
         context.bot.sendMessage(getogchatid(queue[0][0]), f'The previous OG is finished with station {game_id}. Please make your way to {getquestion(f"g{game_id}")} immediately!')
     if len(queue) >= 1:
-        context.bot.sendMessage(getogchatid(queue[1][0]), f'The previous OG is finished with station {game_id}. There is only one OG in front of you. Please slowly make your way to {getquestion(f"g{game_id}")}!')
+        context.bot.sendMessage(getogchatid(queue[1][0]), f'There is only one OG in front of you. Please slowly make your way to {getquestion(f"g{game_id}")}!')
 
 def confirmans(update, context):
     chat_id = update.message.chat_id
@@ -720,7 +730,9 @@ def confirmans(update, context):
         return
     cat = first_word[0].lower()
     attempts = checkqr(getogfromgroup(chat_id), f'{cat}{id}')
-    if original_msg.from_user.id != context.bot.id or first_word not in ['Riddle', 'Quiz'] or attempts == 0 or attempts == 100:
+    if attempts > 5 or attempts == -1:
+        return
+    if original_msg.from_user.id != context.bot.id or first_word not in ['Riddle', 'Quiz'] or attempts == 0 or attempts > 5:
         return
     context.bot.delete_message(chat_id, original_msg.message_id)
     keyboard = InlineKeyboardMarkup([[InlineKeyboardButton('Yes', callback_data = 'sendans.{}.{}'.format(id, getogfromgroup(chat_id))), InlineKeyboardButton('No', callback_data = '{}{}'.format(cat, id))]])
@@ -735,7 +747,7 @@ def full_name(effective_user):
 
 def notifysm(og_id, game_id, context):
     sm_chat_id = getsmchatid(game_id)
-    context.bot.sendMessage(sm_chat_id, f'OG {og_id} is on the way.')
+    context.bot.sendMessage(sm_chat_id, f'OG {og_ab(og_id)} is on the way.')
 
 def now():
     return int(datetime.timestamp(datetime.now()))
@@ -752,7 +764,7 @@ def changeuser(update, context):
             for cid in getchatids():
                 if username == context.bot.getChat(cid).username:
                     executescript(f'UPDATE Member SET og_id = {split[2]}, perms = {split[3]} WHERE chat_id = {cid}')
-                    context.bot.sendMessage(chat_id, f'@{username} is now {"a member of OG" if split[3] == "0" else ("an OGL of OG" if split[3] == "1" else "the station master of station")} {split[2]}!')
+                    context.bot.sendMessage(chat_id, f'@{username} is now {"a member of OG" if split[3] == "0" else ("an OGL of OG" if split[3] == "1" else "the station master of station")} {og_ab(split[2]) if split[3] == "1" and ab else split[2]}!')
                     return
             context.bot.sendMessage(chat_id, f'@{username} does not exist in the database!')
             return
@@ -775,7 +787,7 @@ def ogl(update, context):
     user_id = update.effective_user.id
     chat_id = update.effective_chat.id
     executescript(f'''DELETE FROM Member WHERE chat_id = {user_id};
-    INSERT INTO Member (chat_id, og_id, perms) VALUES ({user_id}, 10, 1)''')
+    INSERT INTO Member (chat_id, og_id, perms) VALUES ({user_id}, 19, 1)''')
     context.bot.sendMessage(chat_id, 'You have level 1 clearance!')
 
 def sm(update, context):

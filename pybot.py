@@ -13,6 +13,7 @@ import os, logging
 # Photo for Quiz 1 (mala)
 
 test = False
+ab = True # Team A and B
 if test:
 	TOKEN = "1422003135:AAFM-i9eufmQxFKvzuOjO4xuPdT2cEujCvk" # test bot
 else:
