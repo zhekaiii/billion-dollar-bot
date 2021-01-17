@@ -145,7 +145,7 @@ Note: A paradox is a statement that contradicts itself''',
         'Where can you find the finest food in UTOWN?'
     ]
     quizzes = [
-        'How much is this bowl of mala?',
+        'How much is this bowl of mala for 4 hungry pax?',
         'I heard of this hex-traordinary camp 3530635F4630775F32303231, I wonder what it is called.',
         'What is the store at #01-06, Stephen Riady Centre?',
         'Which year is the earliest the NUS School of Computing can trace its roots back to?',

@@ -251,7 +251,7 @@ def button(update, context):
                             have_attempts = True if (cat != 'g' and (cat == 'q' or id in [1,2,3,4,9,11,13,14,15])) else False
                             text = f'What would you like to do for {["Station", "Riddle", "Quiz"][int(split[3]) - 1]} {id}? '
                             if have_attempts:
-                                text += f'{attempts} attempt{"s" if attempts != 1 else ""} remaining.' if (attempts >= 0 and attempts < 100) else ('has been completed.' if attempts > 5 else 'is locked.')
+                                text += f'{attempts} attempt{"s" if attempts != 1 else ""} remaining.' if (attempts >= 0 and attempts < 100) else ('It has been completed.' if attempts > 5 else 'It is locked.')
                             if attempts == -1: # Locked
                                 markup.append([InlineKeyboardButton('Unlock', callback_data = f'{callback_data}.unlock')])
                             if attempts < 100: # Not Completed
@@ -335,27 +335,22 @@ def button(update, context):
             text += f' (Attempts left: {attempts})'
         text += f' [{rewards} Point' + ('s' if rewards > 1 else '') + f']</b></u>\n\n{getquestion(f"r{id}")}'
 
-        if attempts == 0 or attempts > 5:
+        if attempts > 0 and attempts <= 5:
             if id == 9:
-                file_id = 'AgACAgUAAxkDAAIEPl_zCAt6Gnbwt0aMUAABFSeHiEVtpAACOKwxG-3nmVdhp2yhkTvWi-HFy2x0AAMBAAMCAANtAAPgxQUAAR4E' if test else 'AgACAgUAAxkDAAMEX_6KyY15c5BaYAwT8FUI9UvssEYAAomsMRtAtflXlQf_MyaQyBSVJcJvdAADAQADAgADbQADIisAAh4E'
-                context.bot.send_photo(chat_id, file_id, text, reply_markup = InlineKeyboardMarkup(markup), parse_mode = ParseMode.HTML)
+                markup.append([InlineKeyboardButton('True', callback_data = 'correct.r9.True'), InlineKeyboardButton('False', callback_data = 'wrong.r9.False')])
+            elif id == 11:
+                markup += [
+                    [InlineKeyboardButton('1', callback_data = 'wrong.r11.1'), InlineKeyboardButton('2', callback_data = 'wrong.r11.2')],
+                    [InlineKeyboardButton('3', callback_data = 'correct.r11.3'), InlineKeyboardButton('4', callback_data = 'wrong.r11.4')],
+                    [InlineKeyboardButton('5', callback_data = 'wrong.r11.5'), InlineKeyboardButton('6', callback_data = 'wrong.r11.6')]
+                ]
             else:
-                context.bot.sendMessage(chat_id, text, reply_markup = InlineKeyboardMarkup(markup), parse_mode = ParseMode.HTML)
-            return
+                text += '\n\nReply to this message to send your answer!'
         if id == 9:
-            markup.append([InlineKeyboardButton('True', callback_data = 'correct.r9.True'), InlineKeyboardButton('False', callback_data = 'wrong.r9.False')])
             file_id = 'AgACAgUAAxkDAAIEPl_zCAt6Gnbwt0aMUAABFSeHiEVtpAACOKwxG-3nmVdhp2yhkTvWi-HFy2x0AAMBAAMCAANtAAPgxQUAAR4E' if test else 'AgACAgUAAxkDAAMEX_6KyY15c5BaYAwT8FUI9UvssEYAAomsMRtAtflXlQf_MyaQyBSVJcJvdAADAQADAgADbQADIisAAh4E'
             context.bot.send_photo(chat_id, file_id, text, reply_markup = InlineKeyboardMarkup(markup), parse_mode = ParseMode.HTML)
-            return
-        elif id == 11:
-            markup += [
-                [InlineKeyboardButton('1', callback_data = 'wrong.r11.1'), InlineKeyboardButton('2', callback_data = 'wrong.r11.2')],
-                [InlineKeyboardButton('3', callback_data = 'correct.r11.3'), InlineKeyboardButton('4', callback_data = 'wrong.r11.4')],
-                [InlineKeyboardButton('5', callback_data = 'wrong.r11.5'), InlineKeyboardButton('6', callback_data = 'wrong.r11.6')]
-            ]
         else:
-            text += '\n\nReply to this message to send your answer!'
-        context.bot.sendMessage(chat_id, text, reply_markup = InlineKeyboardMarkup(markup), parse_mode = ParseMode.HTML)
+            context.bot.sendMessage(chat_id, text, reply_markup = InlineKeyboardMarkup(markup), parse_mode = ParseMode.HTML)
     elif callback_data == 'quiz': #quiz menu
         markup = [[InlineKeyboardButton('Back', callback_data = 'mainmenu')]]
         for i in range(2):
@@ -383,16 +378,10 @@ def button(update, context):
         text = f'<u><b>Quiz {id} '
         text += f'(Attempts left: {attempts}) ' if attempts < 100 else ''
         text += f'[{rewards} Point' + ('s' if rewards > 1 else '') + f']</b></u>\n\n{getquestion(f"q{id}")}'
-        if attempts == 0 or attempts > 5:
-            if id == 7:
-                file_id = 'AgACAgUAAxkDAAIEqV_zOliCZ7mYct7I01uzeaE-J8pTAALSrDEb7eeZV-cOO5gPgL7x157CbHQAAwEAAwIAA20AAyjSBQABHgQ' if test else 'AgACAgUAAxkDAAMCX_6Kr8CnjioZ51RdqI0BpIWJtNwAAoisMRtAtflX1eM3DFfUeaAHRiRtdAADAQADAgADbQADk4UCAAEeBA'
-                context.bot.send_photo(chat_id, file_id, text, reply_markup = InlineKeyboardMarkup(markup), parse_mode = ParseMode.HTML)
-            else:
-                context.bot.sendMessage(chat_id, text, reply_markup = InlineKeyboardMarkup(markup), parse_mode = ParseMode.HTML)
-            return
 
-        choice_list = [
-            ['$1','$2','$3','$4'],
+        if attempts > 0 and attempts <= 2:
+            choice_list = [
+            ['$27.00','$25.40','$21.60','$29.30'],
             ['50c_F0w_2021', 'SOC_FOW_2021', '50C_FOW_2O21', '50c_FOW_2O21'],
             ['Waa Cow!', 'Pizza Hut', 'FairPrice Xpress', 'Bookhaven', 'Office of Admissions'],
             ['1975', '1980', '1998', '1988'],
@@ -402,15 +391,17 @@ def button(update, context):
             ['15', '25', '13', '23'],
             ['75', '68', '82', '72'],
             ['19', '21', '20', '22']
-        ]
-        choices = [InlineKeyboardButton(choice_list[id - 1][0], callback_data = f'correct.q{id}.{choice_list[id - 1][0]}')]
-        choices += [InlineKeyboardButton(choice_list[id - 1][i], callback_data = f'wrong.q{id}.{choice_list[id - 1][i]}') for i in range(1,4)]
-        shuffle(choices)
-        markup.append(choices[:2])
-        markup.append(choices[2:])
+            ]
+            choices = [InlineKeyboardButton(choice_list[id - 1][0], callback_data = f'correct.q{id}.{choice_list[id - 1][0]}')]
+            choices += [InlineKeyboardButton(choice_list[id - 1][i], callback_data = f'wrong.q{id}.{choice_list[id - 1][i]}') for i in range(1,4)]
+            shuffle(choices)
+            markup.append(choices[:2])
+            markup.append(choices[2:])
 
-        if id == 7:
-            context.bot.send_photo(chat_id, 'AgACAgUAAxkDAAIEqV_zOliCZ7mYct7I01uzeaE-J8pTAALSrDEb7eeZV-cOO5gPgL7x157CbHQAAwEAAwIAA20AAyjSBQABHgQ', text, reply_markup = InlineKeyboardMarkup(markup), parse_mode = ParseMode.HTML)
+        if id == 1:
+            context.bot.send_photo(chat_id, 'AgACAgUAAxkDAAIIpmADrtrWGm8mHX9UtoAM70POOBEPAAIiqzEbDQQgVMbWIVJvBTj5XSm6bnQAAwEAAwIAA3kAA15gAQABHgQ' if test else 'AgACAgUAAxkDAAIBX2ADsRoYBqbHcom02kOdZFFfaULeAAIjqzEbDQQgVGeuDF7RFsfGOjXHbHQAAwEAAwIAA20AA2knBgABHgQ', text, reply_markup = InlineKeyboardMarkup(markup), parse_mode = ParseMode.HTML)
+        elif id == 7:
+            context.bot.send_photo(chat_id, 'AgACAgUAAxkDAAIEqV_zOliCZ7mYct7I01uzeaE-J8pTAALSrDEb7eeZV-cOO5gPgL7x157CbHQAAwEAAwIAA20AAyjSBQABHgQ'if test else 'AgACAgUAAxkDAAMCX_6Kr8CnjioZ51RdqI0BpIWJtNwAAoisMRtAtflX1eM3DFfUeaAHRiRtdAADAQADAgADbQADk4UCAAEeBA', text, reply_markup = InlineKeyboardMarkup(markup), parse_mode = ParseMode.HTML)
         else:
             context.bot.sendMessage(chat_id, text, reply_markup = InlineKeyboardMarkup(markup), parse_mode = ParseMode.HTML)
     elif callback_data.startswith('correct'):
@@ -723,6 +714,7 @@ def confirmans(update, context):
     chat_id = update.message.chat_id
     original_msg = update.message.reply_to_message
     original_text = original_msg.text
+    context.bot.sendMessage(chat_id, original_msg.photo[0].file_id)
     try:
         first_word = original_text.split()[0]
         id = int(original_text.split()[1])
