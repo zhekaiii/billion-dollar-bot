@@ -338,4 +338,4 @@ def getchatids():
 def og_ab(og_id):
     number = (og_id + 1) // 2
     letter = 'A' if og_id % 2 else 'B'
-    return f'{number}{letter}' if ab else f'{number}'
+    return f'{number}{letter}' if ab else f'{og_id}'
