@@ -33,18 +33,22 @@ def help(update, context):
             text += 'Level 1: OGL\n'
             text += 'Level 2: Station Master\n\n'
             text += 'You can lock/unlock QR codes, +/- attempts for quizzes and riddles and +/- points for whichever OG you want.'
+            if ab:
+                text += '\nTo change OGs for someone, 1 = OG 1A and 2 = OG 1B'
         elif userexists(chat_id) and haveperms(chat_id, 2): # Station Master
             text = '/mainmenu - Brings up the main menu where you interact with the bot!\n\n'
             text += 'When an OG arrives at your station, you have to mark their attendance via the main menu.\n\n'
             text += 'After they complete the station, you can pass or fail them via the main menu.'
-        else:
+        elif userexists(chat_id) and haveperms(chat_id, 1): # OGL
             text = 'You can send me QR codes here for me to unlock for your OG!'
+        else:
+            text = 'Please interact with me via the group chat!'
     elif update.message.chat.type == 'group':
         text = '''/start - Must be sent by the OGL to register the group chat into the database
 /register - Brings up the register button to register yourselves into the database
 /mainmenu - Brings up the main menu where you interact with the bot!
 
-To send QR codes, do it via PM
+Only OGLs can send me QR codes via PM!
 
 Quizzes are MCQs with 2 attempts each
 
@@ -599,6 +603,8 @@ def decode_qr(update, context):
     if haveperms(chat_id, 2): # Level 2 clearance or higher means not in any OG, so no need scan QR code
         context.bot.sendMessage(chat_id, 'You don\'t belong to any OGs! You don\'t need to send me QR codes!')
         return
+    if getogchatid(getogfromperson(chat_id)) == None:
+        context.bot.sendMessage(chat_id, 'Please send /start in your group chat to register the group chat into the database!')
     if update.message.photo:
         id_img = update.message.photo[-1].file_id
     else:
