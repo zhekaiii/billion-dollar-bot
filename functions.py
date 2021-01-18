@@ -15,11 +15,11 @@ from datetime import datetime
 
 from io import BytesIO
 from PIL import Image
+from base64 import b64decode
 
-from random import shuffle
+from random import shuffle, choice
 
 from db import *
-
 from pybot import test, ab, ic1_id, ic2_id
 
 def help(update, context):
@@ -64,24 +64,19 @@ def start(update, context):
     type = chat.type
     if type == 'private' and not userexists(user_id):
         text = 'Welcome!' if not full_name(update.effective_user) else 'Welcome, {}!'.format(full_name(update.effective_user))
-        text += ' Please register in your respective Telegram Group! PMs are only for scanning QR codes!'
+        text += ' Please await more instructions from your group chats!'
     elif type == 'group':
-        if not userexists(user_id):
-            text = 'Only an authorized personel can do that!'
-        else:
+        if userexists(user_id) and (haveperms(user_id, 1) and (not haveperms(user_id, 2))):
             og_id = getogfromperson(user_id)
-            if not (getogchatid(og_id) != None and getogchatid(og_id) == chat_id):
-                if getogchatid(og_id) and getogchatid(og_id) != chat_id:
+            if getogchatid(og_id) == None or getogchatid(og_id) != chat_id: # if your og hasn't had a chatid or if your og chat id is another group
+                if getogchatid(og_id) and getogchatid(og_id) != chat_id: # if your og chat id is another group
                     text = f'Warning! Another group chat has been registered under OG {og_ab(og_id)}. Overriding. {getogchatid(og_id)}'
-                elif getogfromgroup(chat_id) and getogfromgroup(chat_id) != og_id:
+                elif getogfromgroup(chat_id) and getogfromgroup(chat_id) != og_id: # if your group is another OG
                     text = f'This group chat has been registered as OG {getogfromgroup(chat_id)}. Overriding.'
                     executescript(f'UPDATE OG SET chat_id = NULL WHERE id = {getogfromgroup(chat_id)}')
                 elif getogchatid(og_id) is None:
                     text = 'Group chat registered successfully.'
-                context.bot.sendMessage(chat_id, text)
             executescript(f'UPDATE OG SET chat_id = {chat_id} WHERE id = {og_id}')
-            register(update, context)
-            return
     context.bot.sendMessage(chat_id, text)
 
 def register(update, context):
@@ -107,47 +102,41 @@ def register(update, context):
                 temp.append(InlineKeyboardButton(og_ab(num) if og else num, callback_data = f'register.{num}.{1 if og else 2}'))
             markup.append(temp)
         keyboard = InlineKeyboardMarkup(markup)
-    elif not groupregistered(chat_id):
-        start(update, context)
-        return
-    else:
-        text = '''Click here to register your username in the system! Remember to PM me /start first before you register or you won\'t be able to receive my messages!
-
-Anyone can run /register anytime to bring this button up again.'''
-        keyboard = InlineKeyboardMarkup(
-            [[InlineKeyboardButton('Register!', callback_data = f'register.{getogfromgroup(chat_id)}.0')]]
-        )
     context.bot.sendMessage(chat_id, text, reply_markup = keyboard)
 
 def mainmenu(update, context):
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
     keyboard = None
-    if not (userexists(user_id) and haveperms(user_id, 2)): # OGL/Freshie or unregistered user
-        if update.effective_chat.type == 'private':
-            text = 'You can only do that in your group chat!'
-        elif not groupregistered(chat_id):
-            text = 'OGL, please type /start!'
-        else:
-            keyboard = InlineKeyboardMarkup(
-                [
-                    [InlineKeyboardButton('Favour Points', callback_data = 'points')],
-                    [InlineKeyboardButton('Station Games', callback_data = 'game')],
-                    [InlineKeyboardButton('Riddles', callback_data = 'riddle')],
-                    [InlineKeyboardButton('Quizzes', callback_data = 'quiz')],
-                ]
-            )
-            text = f'Hello, OG {og_ab(getogfromgroup(chat_id))}. What would you like to do?'
+    if update.effective_chat.type == 'group':
+        if not userexists(user_id) or haveperms(user_id, 3) or not haveperms(user_id, 2): # Unregistered user or head or OGL
+            if not groupregistered(chat_id):
+                if userexists(user_id) and haveperms(user_id, 1) and not haveperms(user_id, 3):
+                    start(update, context)
+                    mainmenu(update, context)
+                else:
+                    text = 'OGL, please type /start!'
+            else:
+                keyboard = InlineKeyboardMarkup(
+                    [
+                        [InlineKeyboardButton('Favour Points', callback_data = 'points')],
+                        [InlineKeyboardButton('Station Games', callback_data = 'game')],
+                        [InlineKeyboardButton('Riddles', callback_data = 'riddle')],
+                        [InlineKeyboardButton('Quizzes', callback_data = 'quiz')],
+                    ]
+                )
+                text = f'Hello, OG {og_ab(getogfromgroup(chat_id))}. What would you like to do?'
+    elif not (userexists(user_id) and haveperms(user_id, 2)): # OGL or unregistered user
+        text = 'You can only do that in your group chat!'
     elif not haveperms(user_id, 3): # Station Master
-        if update.effective_chat.type == 'private':
-            keyboard = InlineKeyboardMarkup(
-                [
-                    [InlineKeyboardButton('Check Queue', callback_data = 'checkqueue')],
-                    [InlineKeyboardButton('Mark Attendance', callback_data = 'attendance')],
-                    [InlineKeyboardButton('Pass/Fail an OG', callback_data = 'passfail')],
-                ]
-            )
-            text = f'Hello, Station {getogfromperson(chat_id)} Master {full_name(update.effective_user)}. What would you like to do?'
+        keyboard = InlineKeyboardMarkup(
+            [
+                [InlineKeyboardButton('Check Queue', callback_data = 'checkqueue')],
+                [InlineKeyboardButton('Mark Attendance', callback_data = 'attendance')],
+                [InlineKeyboardButton('Pass/Fail an OG', callback_data = 'passfail')],
+            ]
+        )
+        text = f'Hello, Station {getogfromperson(chat_id)} Master {full_name(update.effective_user)}. What would you like to do?'
     else: # Head
         markup = []
         for i in range(10 if ab else 5):
@@ -170,20 +159,12 @@ def button(update, context):
     if callback_data.startswith('register'):
         og_id = int(callback_data.split('.')[1])
         perms = int(callback_data.split('.')[2])
-        if userexists(user.id) and perms == 0:
-            text = 'You have already registered!'
-        else:
-            executescript(f'''DELETE FROM Member WHERE chat_id = {user.id};
-            INSERT INTO Member (chat_id, og_id, perms) VALUES ({user.id}, {og_id}, {perms})''')
-            text = 'You have successfully registered! '
-            if perms == 0:
-                text += f'You are from OG {og_ab(og_id)}!'
-            elif perms == 1:
-                text += f'You are the OGL of OG {og_ab(og_id)}!'
-            elif perms == 2:
-                text += f'You are the Station Master of Station {og_id}!'
-            else:
-                text += 'You are the big boss. You have Master Control!'
+        executescript(f'''DELETE FROM Member WHERE chat_id = {user.id};
+        INSERT INTO Member (chat_id, og_id, perms) VALUES ({user.id}, {og_id}, {perms})''')
+        if perms == 1:
+            text += f'You are the OGL of OG {og_ab(og_id)}!'
+        elif perms == 2:
+            text += f'You are the Station Master of Station {og_id}!'
         context.bot.sendMessage(user.id, text)
         return
     if callback_data == 'nothing':
@@ -594,10 +575,7 @@ def button(update, context):
 
 def decode_qr(update, context):
     chat_id = update.message.chat_id
-    if not userexists(chat_id):
-        context.bot.sendMessage(chat_id, 'Please register yourself in your respective Telegram Group before you start sending QR codes!')
-        return
-    if not haveperms(chat_id, 1): # Level 0 cannot send QR codes
+    if not userexists(chat_id) or not haveperms(chat_id, 1): # Level 0 cannot send QR codes
         context.bot.sendMessage(chat_id, 'Only OGLs can send me QR codes!')
         return
     if haveperms(chat_id, 2): # Level 2 clearance or higher means not in any OG, so no need scan QR code
@@ -605,6 +583,7 @@ def decode_qr(update, context):
         return
     if getogchatid(getogfromperson(chat_id)) == None:
         context.bot.sendMessage(chat_id, 'Please send /start in your group chat to register the group chat into the database!')
+        return
     if update.message.photo:
         id_img = update.message.photo[-1].file_id
     else:
@@ -613,11 +592,11 @@ def decode_qr(update, context):
     foto = context.bot.getFile(id_img)
 
     new_file = context.bot.get_file(foto.file_id)
-    new_file.download('qrcode.png')
+    new_file.download("qrcode.png")
 
     try:
-        result = decode(Image.open('qrcode.png'))
-        decoded = result[0].data.decode("utf-8")
+        result = decode(Image.open("qrcode.png"))
+        decoded = b64decode(result[0].data).decode("utf-8")
         if decoded.startswith('RIDDLE'):
             unlockriddle(int(decoded[7:]), update, context)
         elif decoded.startswith('QUIZ'):
@@ -626,9 +605,25 @@ def decode_qr(update, context):
             unlockpts(int(decoded[1]), update, context)
         elif decoded.startswith('GAME'):
             unlockgame(int(decoded[5:]), update, context)
+        else:
+            1/0
     except Exception as e:
         print(e)
-        context.bot.sendMessage(chat_id=chat_id, text='Unable to detect QR code. Try retaking the picture!')
+        fun_text = [
+            'Try retaking the picture and do a better job at it this time!',
+            'Don\'t know how to take picture properly is it?',
+            'Your phototaking skills need some work.',
+            'You should really take up photography lessons.',
+            'Are you sure you sent me a QR code?',
+            'Is the lighting bad or is it just your skills?',
+            'Is the camera bad or is it just your skills?',
+            'A 4-year-old can do better than you. Shame on you.',
+            'I guess I\'m just picky.',
+            'Because you can\'t take pictures properly, -100 Favour Points!',
+            'Did you scan a SafeEntry QR code by mistake?',
+            'I didn\'t ask for irrelevant pictures.'
+        ]
+        context.bot.sendMessage(chat_id=chat_id, text=f'Unable to detect valid QR code. {choice(fun_text)}')
     os.remove("qrcode.png")
 
 def addpts(og_id, amt):
@@ -773,13 +768,6 @@ def unlockall(update, context):
         unlockriddle(i, update, context)
     for i in range(1, 11):
         unlockquiz(i, update, context)
-
-def freshie(update, context):
-    user_id = update.effective_user.id
-    chat_id = update.effective_chat.id
-    executescript(f'''DELETE FROM Member WHERE chat_id = {user_id};
-    INSERT INTO Member (chat_id, og_id, perms) VALUES ({user_id}, 1, 0)''')
-    context.bot.sendMessage(update.effective_chat.id, 'You have level 0 clearance!')
 
 def ogl(update, context):
     user_id = update.effective_user.id

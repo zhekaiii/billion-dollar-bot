@@ -275,7 +275,7 @@ def haveperms(chat_id, level):
     cur.execute('''SELECT perms from Member WHERE chat_id = {}'''.format(chat_id))
     res = cur.fetchone()
     cur.close()
-    return res[0] >= level if res else False
+    return (res[0] >= level if res else False)
 
 def getquestion(catandid):
     global db

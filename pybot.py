@@ -49,7 +49,6 @@ def main():
 
 	dp.add_handler(CommandHandler('reset', resetdb))
 	dp.add_handler(CommandHandler('unlock', unlockall))
-	dp.add_handler(CommandHandler('freshie', freshie))
 	dp.add_handler(CommandHandler('ogl', ogl))
 	dp.add_handler(CommandHandler('sm', sm))
 	dp.add_handler(CommandHandler('head', head))
