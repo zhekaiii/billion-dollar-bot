@@ -222,7 +222,7 @@ def button(update, context):
                 else:
                     cat = 'g' if split[3] == '1' else ('r' if split[3] == '2' else 'q')
                     if len(split) == 4:
-                        for i in range(3 if cat == 'r' else 2):
+                        for i in range(3 if cat == 'q' else 2):
                             temp = []
                             for j in range(1, 6):
                                 num = i * 5 + j
@@ -293,7 +293,7 @@ def button(update, context):
         context.bot.sendMessage(chat_id, f'Your OG has {pts} Favour Points', reply_markup = keyboard)
     elif callback_data == 'riddle': # riddle menu
         markup = [[InlineKeyboardButton('Back', callback_data = 'mainmenu')]]
-        for i in range(3):
+        for i in range(2):
             temp = []
             for j in range(1, 6):
                 riddlenum = str(i * 5 + j)
@@ -316,29 +316,29 @@ def button(update, context):
             return
         rewards = getrewards(f'r{id}')
         text = f'<u><b>Riddle {id}'
-        if id in [1,2,3,4,9,11,13,14,15] and attempts < 100:
+        if id in [1,2,5,7,9,10] and attempts <= 5:
             text += f' (Attempts left: {attempts})'
         text += f' [{rewards} Point' + ('s' if rewards > 1 else '') + f']</b></u>\n\n{getquestion(f"r{id}")}'
 
         if attempts > 0 and attempts <= 5:
-            if id == 9:
-                markup.append([InlineKeyboardButton('True', callback_data = 'correct.r9.True'), InlineKeyboardButton('False', callback_data = 'wrong.r9.False')])
-            elif id == 11:
+            if id == 5:
+                markup.append([InlineKeyboardButton('True', callback_data = 'correct.r5.True'), InlineKeyboardButton('False', callback_data = 'wrong.r5.False')])
+            elif id == 7:
                 markup += [
-                    [InlineKeyboardButton('1', callback_data = 'wrong.r11.1'), InlineKeyboardButton('2', callback_data = 'wrong.r11.2')],
-                    [InlineKeyboardButton('3', callback_data = 'correct.r11.3'), InlineKeyboardButton('4', callback_data = 'wrong.r11.4')],
-                    [InlineKeyboardButton('5', callback_data = 'wrong.r11.5'), InlineKeyboardButton('6', callback_data = 'wrong.r11.6')]
+                    [InlineKeyboardButton('1', callback_data = 'wrong.r7.1'), InlineKeyboardButton('2', callback_data = 'wrong.r7.2')],
+                    [InlineKeyboardButton('3', callback_data = 'correct.r7.3'), InlineKeyboardButton('4', callback_data = 'wrong.r7.4')],
+                    [InlineKeyboardButton('5', callback_data = 'wrong.r7.5'), InlineKeyboardButton('6', callback_data = 'wrong.r7.6')]
                 ]
             else:
                 text += '\n\nReply to this message to send your answer!'
-        if id == 9:
+        if id == 5:
             file_id = 'AgACAgUAAxkDAAIEPl_zCAt6Gnbwt0aMUAABFSeHiEVtpAACOKwxG-3nmVdhp2yhkTvWi-HFy2x0AAMBAAMCAANtAAPgxQUAAR4E' if test else 'AgACAgUAAxkDAAMEX_6KyY15c5BaYAwT8FUI9UvssEYAAomsMRtAtflXlQf_MyaQyBSVJcJvdAADAQADAgADbQADIisAAh4E'
             context.bot.send_photo(chat_id, file_id, text, reply_markup = InlineKeyboardMarkup(markup), parse_mode = ParseMode.HTML)
         else:
             context.bot.sendMessage(chat_id, text, reply_markup = InlineKeyboardMarkup(markup), parse_mode = ParseMode.HTML)
     elif callback_data == 'quiz': #quiz menu
         markup = [[InlineKeyboardButton('Back', callback_data = 'mainmenu')]]
-        for i in range(2):
+        for i in range(3):
             temp = []
             for j in range(1, 6):
                 quiznum = str(i * 5 + j)
@@ -375,7 +375,12 @@ def button(update, context):
             ['80', '60', '100', '120'],
             ['15', '25', '13', '23'],
             ['75', '68', '82', '72'],
-            ['19', '21', '20', '22']
+            ['19', '21', '20', '22'],
+            ['Information Security', 'Artificial Intelligence', 'Parallel Computing', 'Algorithms & Theory'],
+            ['OMO Store', 'OWO Store', 'UWU Store', 'UMU Store'],
+            ['4', '3', '2', '5'],
+            ['5', '4', '3', '6'],
+            ['8', '6', '7', '9']
             ]
             choices = [InlineKeyboardButton(choice_list[id - 1][0], callback_data = f'correct.q{id}.{choice_list[id - 1][0]}')]
             choices += [InlineKeyboardButton(choice_list[id - 1][i], callback_data = f'wrong.q{id}.{choice_list[id - 1][i]}') for i in range(1,4)]
@@ -419,10 +424,10 @@ def button(update, context):
         mainmenu(update, context)
     elif callback_data.startswith('sendans'):
         id = callback_data.split('.')[1]
-        answering_og = callback_data.split('.')[2]
-        attempts = checkqr(answering_og, f'{cat}{id}')
+        answering_og = int(callback_data.split('.')[2])
+        attempts = checkqr(answering_og, f'r{id}')
         ans = f'<u>Riddle {id}</u>\n'
-        ans += getquestion(f'{cat}{id}')
+        ans += getquestion(f'r{id}')
         ans += f'\nOG {og_ab(answering_og)}'
         ans += '\nAnswer: ' + original_text.split('\n')[1]
         keyboard = InlineKeyboardMarkup([[
@@ -435,7 +440,7 @@ def button(update, context):
         mainmenu(update, context)
     elif callback_data.startswith('accept'):
         id = int(callback_data.split('.')[1])
-        answering_og = callback_data.split('.')[2]
+        answering_og = int(callback_data.split('.')[2])
         executescript('UPDATE OG SET r{} = 100 WHERE id = {}'.format(id, answering_og))
         pts = getrewards(f'r{id}')
         addpts(answering_og, pts)
@@ -444,7 +449,7 @@ def button(update, context):
         context.bot.sendMessage(getogchatid(answering_og), f'You gained {pts} Favour Points, you now have {getpoints(answering_og)} points!')
     elif callback_data.startswith('reject'):
         id = int(callback_data.split('.')[1])
-        answering_og = callback_data.split('.')[2]
+        answering_og = int(callback_data.split('.')[2])
         text = f'OG {og_ab(answering_og)}, your answer for Riddle {id} has been rejected! 😵'
         if id in [1,2,3,4,11,13,14,15]:
             attempts = checkqr(answering_og, f'r{id}') - 1
@@ -584,6 +589,9 @@ def decode_qr(update, context):
     if getogchatid(getogfromperson(chat_id)) == None:
         context.bot.sendMessage(chat_id, 'Please send /start in your group chat to register the group chat into the database!')
         return
+    if getqueueforog(getogfromperson(chat_id)):
+        context.bot.sendMessage(chat_id, 'Your OG is queueing for a station game. You cannot scan QR codes!')
+        return
     if update.message.photo:
         id_img = update.message.photo[-1].file_id
     else:
@@ -715,7 +723,8 @@ def confirmans(update, context):
     chat_id = update.message.chat_id
     original_msg = update.message.reply_to_message
     original_text = original_msg.text
-    context.bot.sendMessage(chat_id, original_msg.photo[0].file_id)
+    if original_msg.from_user.username != ("zkthebot" if test else "nbdi_bot"):
+        return
     try:
         first_word = original_text.split()[0]
         id = int(original_text.split()[1])
@@ -764,9 +773,9 @@ def changeuser(update, context):
     context.bot.sendMessage(chat_id, 'Wrong parameters!')
 
 def unlockall(update, context):
-    for i in range(1, 16):
-        unlockriddle(i, update, context)
     for i in range(1, 11):
+        unlockriddle(i, update, context)
+    for i in range(1, 16):
         unlockquiz(i, update, context)
 
 def ogl(update, context):

@@ -42,11 +42,6 @@ def resetdb(a = None, b = None):
         r8 INTEGER DEFAULT -1,
         r9 INTEGER DEFAULT -1,
         r10 INTEGER DEFAULT -1,
-        r11 INTEGER DEFAULT -1,
-        r12 INTEGER DEFAULT -1,
-        r13 INTEGER DEFAULT -1,
-        r14 INTEGER DEFAULT -1,
-        r15 INTEGER DEFAULT -1,
         q1 INTEGER DEFAULT -1,
         q2 INTEGER DEFAULT -1,
         q3 INTEGER DEFAULT -1,
@@ -57,6 +52,11 @@ def resetdb(a = None, b = None):
         q8 INTEGER DEFAULT -1,
         q9 INTEGER DEFAULT -1,
         q10 INTEGER DEFAULT -1,
+        q11 INTEGER DEFAULT -1,
+        q12 INTEGER DEFAULT -1,
+        q13 INTEGER DEFAULT -1,
+        q14 INTEGER DEFAULT -1,
+        q15 INTEGER DEFAULT -1,
         g1 INTEGER DEFAULT -1,
         g2 INTEGER DEFAULT -1,
         g3 INTEGER DEFAULT -1,
@@ -115,18 +115,14 @@ def resetdb(a = None, b = None):
 
 def resetqns():
     points_list = {
-        'g' : [5,7,7,5,5,5,8,5,5,5,7],
-        'q' : [1,1,2,2,2,1,1,1,1,1],
-        'r' : [2,1,2,2,2,1,1,3,2,2,1,2,1,1,1],
+        'g' : [5,7,5,5,3,5,8,5,5,5,7],
+        'q' : [1,1,1,2,1,1,2,1,1,1,1,1,1,1,2],
+        'r' : [2,1,2,2,2,1,1,3,2,2],
         'p' : [1,1,1,1,1,1,2,2,2,2,2,2,3,3,4]
     }
     riddles = [
-        'Placeholder',
-        'I have keys without key locks. I have space without rooms. You can enter but you cannot go outside. What am I?',
         'BreadTalk is Overrated i only go to ________',
         'Why is bread noisier than coffee?',
-        'What question can you never answer yes to?',
-        'A man got stuck in a room with two doors, one leads to a room of magnifying glass that magnifies the sun rays which would burn him, the other door leads to a dragon lair, how does he escape the room without dying?',
         '''In a mansion the owner of the house is murdered on a sunday morning. The inspector interviewed the gardener, the wife and the maid on what they are doing on the day of the murder.
 The gardener answered “I was attending the garden”
 The wife answered “I was in the kitchen preparing breakfast”
@@ -141,7 +137,6 @@ Note: A paradox is a statement that contradicts itself''',
         '''Roy was watching television. Just after the midnight news here was a weather forecast: “It is raining now and will rain for the next 2 days. However, in 72 hours it will be bright and sunny.”
 “Wrong again”, snorted Roy. He was correct but how did he know?''',
         'A mute SOC graduate walks into a bar. They had a sign that wrote “10 pints of beer” and showed it to the bartender. Why did they stop the bartender when the 3rd pint was served?',
-        'I’m a rare case where today comes before yesterday. What am I?',
         'Where can you find the finest food in UTOWN?'
     ]
     quizzes = [
@@ -154,7 +149,12 @@ Note: A paradox is a statement that contradicts itself''',
         'How many square roof panels are there in Frontier of UTown® shelter walkway?',
         '(((((5 * 2) + 6 / 2) * (8 - 4)) - 9 / 3) - 4) / 3',
         'How many POPStation lockers are there in Stephen Riady Centre?',
-        'How many NUS utown beneficiaries are there?'
+        'How many NUS utown beneficiaries are there?',
+        'Which of the following are not focus areas of Computer Science?',
+        'What is the unmanned convenience store in SOC called?',
+        'How many floors are there in COM1?',
+        'How many zones were there in NUS before December 6, 2020?',
+        'How many food courts are there in NUS Kent Ridge Campus?'
     ]
     locations = [
         'SRC Level 2 Balcony',
