@@ -1,5 +1,5 @@
 import sqlite3
-from pybot import ic1_id, ic2_id, ab
+from pybot import ic1_id, ic2_id
 
 db = 'db.sqlite'
 
@@ -96,6 +96,7 @@ def resetdb(a = None, b = None):
         queue INTEGER
     );
 
+    INSERT INTO House (name) VALUES ('Ilent');
     INSERT INTO House (name) VALUES ('Barg');
     INSERT INTO House (name) VALUES ('Etlas');
     INSERT INTO House (name) VALUES ('Aikon');
@@ -103,8 +104,8 @@ def resetdb(a = None, b = None):
     INSERT INTO House (name) VALUES ('Trewitt')
     ''')
 
-    for house_id in range(1, 6):
-        for og in range(9):
+    for house_id in range(1, 7):
+        for og in range(6):
             cur.execute(f'INSERT INTO OG (house_id) VALUES ({house_id})')
     for i in [ic1_id, ic2_id]:
         cur.execute(f'INSERT OR IGNORE INTO Member (chat_id, og_id, perms) VALUES ({i}, 0, 3)')
@@ -335,7 +336,5 @@ def getchatids():
     cur.close()
     return [i[0] for i in res]
 
-def og_ab(og_id):
-    number = (og_id + 1) // 2
-    letter = 'A' if og_id % 2 else 'B'
-    return f'{number}{letter}' if ab else f'{og_id}'
+def og_ab(og_id): # in case we wanna format og names e.g. instead of og 7 maybe we have og B1
+    return og_id

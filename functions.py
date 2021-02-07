@@ -20,7 +20,7 @@ from base64 import b64decode
 from random import shuffle, choice
 
 from db import *
-from pybot import test, ab, ic1_id, ic2_id
+from pybot import test, ic1_id, ic2_id
 
 def help(update, context):
     # TODO: Help text for Station Masters
@@ -93,12 +93,12 @@ def register(update, context):
         og = True if update.message.text.split(' ')[1] == 'ogl' else (False if update.message.text.split(' ')[1] == 'sm' else None)
         if og is None: return
         text = 'Click on the OG you\'re leading!' if og else 'Click on the station you are in charge of!'
-        text += ' Remember to PM me /start first before you register or you won\'t be able to receive my messages!'
+        text += ' Remember to PM me /start first before you register or you won\'t be able to receive my confirmation message!'
         markup = []
-        for i in range(10 if og and ab else (5 if og else 2)):
+        for i in range(6 if og else 2):
             temp = []
-            for j in range(1, 5 if og else 6):
-                num = i * (4 if og else 5) + j
+            for j in range(1, 7 if og else 6):
+                num = i * (6 if og else 5) + j
                 temp.append(InlineKeyboardButton(og_ab(num) if og else num, callback_data = f'register.{num}.{1 if og else 2}'))
             markup.append(temp)
         keyboard = InlineKeyboardMarkup(markup)
@@ -139,10 +139,10 @@ def mainmenu(update, context):
         text = f'Hello, Station {getogfromperson(chat_id)} Master {full_name(update.effective_user)}. What would you like to do?'
     else: # Head
         markup = []
-        for i in range(10 if ab else 5):
+        for i in range(6):
             temp = []
-            for j in range(1, 5):
-                num = i * 4 + j
+            for j in range(1, 7):
+                num = i * 6 + j
                 temp.append(InlineKeyboardButton(og_ab(num), callback_data = f'master.{num}'))
             markup.append(temp)
         keyboard = InlineKeyboardMarkup(markup)
@@ -589,9 +589,13 @@ def decode_qr(update, context):
     if getogchatid(getogfromperson(chat_id)) == None:
         context.bot.sendMessage(chat_id, 'Please send /start in your group chat to register the group chat into the database!')
         return
-    if getqueueforog(getogfromperson(chat_id)):
-        context.bot.sendMessage(chat_id, 'Your OG is queueing for a station game. You cannot scan QR codes!')
-        return
+    q = getqueueforog(getogfromperson(chat_id))
+    if q:
+        og_id = getogfromperson(chat_id)
+        gq = getqueueforgame(q[0][0])
+        if gq[0][0] == og_id or (gq[0][1] == 0 and gq[1][0] == og):
+            context.bot.sendMessage(chat_id, 'Your OG is queueing for a station game. You cannot scan QR codes!')
+            return
     if update.message.photo:
         id_img = update.message.photo[-1].file_id
     else:
@@ -643,12 +647,12 @@ def unlockriddle(id, update, context):
     user_id = update.effective_user.id
     og_id = getogfromperson(user_id)
     og_chat = getogchatid(og_id)
-    if id in [1,2,3,4,13,14,15]:
-        attempts = 5
-    elif id == 11:
+    if id == 5:
+        attempts = 1
+    elif id == 7:
         attempts = 2
     else:
-        attempts = 1
+        attempts = 5
     if checkqr(og_id, 'r{}'.format(id)) > -1:
         context.bot.sendMessage(user_id, 'You have already scanned this QR Code!')
         return
