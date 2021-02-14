@@ -10,9 +10,9 @@ from functions import *
 import os, logging
 
 # TODO:
-# Photo for Quiz 1 (mala)
+# IC 3 and 4
 
-test = False
+test = True
 if test:
 	TOKEN = "1422003135:AAFM-i9eufmQxFKvzuOjO4xuPdT2cEujCvk" # test bot
 else:
