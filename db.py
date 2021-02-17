@@ -116,10 +116,10 @@ def resetdb(a = None, b = None):
 
 def resetqns():
     points_list = {
-        'g' : [5,7,5,5,3,5,8,5,5,5,7],
-        'q' : [1,1,1,2,1,1,2,1,1,1,1,1,1,1,2],
-        'r' : [2,2,2,4,2,2,1,2,2,1],
-        'p' : [1,1,1,1,1,1,2,2,2,2,2,2,3,3,4]
+        'g' : [10,20,10,10,10,10,20,20,10,20],
+        'q' : [5,2,2,5,2,2,5,2,2,2,2,2,2,2,5],
+        'r' : [5,5,5,10,5,5,2,5,5,2],
+        'p' : [1,1,1,1,1,1,2,2,2,2,2,2,4,4,5]
     }
     riddles = [
         'BreadTalk is Overrated i only go to ________',
@@ -141,7 +141,7 @@ Note: A paradox is a statement that contradicts itself''',
         'Where can you find the finest food in UTOWN?'
     ]
     quizzes = [
-        'How much is this bowl of mala for 4 hungry pax?',
+        'How much is this bowl of mala for 3 starving people?',
         'I heard of this hex-traordinary camp 3530635F4630775F32303231, I wonder what it is called.',
         'What is the store at #01-06, Stephen Riady Centre?',
         'Which year is the earliest the NUS School of Computing can trace its roots back to?',
