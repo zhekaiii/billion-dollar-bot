@@ -8,6 +8,7 @@ from telegram.ext import Updater, Filters, CommandHandler, MessageHandler, Callb
 from functions import *
 
 import os, logging
+import psycopg2 as psql
 
 # TODO:
 # IC 3 and 4
@@ -26,6 +27,10 @@ logger = logging.getLogger(__name__)
 
 ic1_id = 129464681 #chat_id of Zhekai
 ic2_id = 468173002 #chat_id of Jeremy
+
+# database things
+con = psql.connect(os.environ['DATABASE_URL'], sslmode='require')
+cur = con.cursor()
 
 def error(update, context):
     """Log Errors caused by Updates."""
@@ -62,4 +67,10 @@ def main():
 	updater.idle()
 
 if __name__ == '__main__':
-	main()
+	try:
+		main()
+	except Exception as e:
+		logger.warning(e)
+		logger.warning('hello')
+		cur.close()
+		con.close()

@@ -20,7 +20,7 @@ from base64 import b64decode
 from random import shuffle, choice
 
 from db import *
-from pybot import test, ic1_id, ic2_id
+from pybot import test, ic1_id, ic2_id, logger
 
 def help(update, context):
     # TODO: Help text for Station Masters
@@ -33,8 +33,8 @@ def help(update, context):
             text += 'Level 1: OGL\n'
             text += 'Level 2: Station Master\n\n'
             text += 'You can lock/unlock QR codes, +/- attempts for quizzes and riddles and +/- points for whichever OG you want.'
-            if ab:
-                text += '\nTo change OGs for someone, 1 = OG 1A and 2 = OG 1B'
+            #if ab:
+            #    text += '\nTo change OGs for someone, 1 = OG 1A and 2 = OG 1B'
         elif userexists(chat_id) and haveperms(chat_id, 2): # Station Master
             text = '/mainmenu - Brings up the main menu where you interact with the bot!\n\n'
             text += 'When an OG arrives at your station, you have to mark their attendance via the main menu.\n\n'

@@ -1,25 +1,17 @@
-import sqlite3
-from pybot import ic1_id, ic2_id
+import psycopg2 as psql
+from pybot import ic1_id, ic2_id, cur, con
 
-db = 'db.sqlite'
-
-'''
-con = sqlite3.connect(db)
-cur = con.cursor()
-con.commit()
-cur.close()
-'''
-
-def resetdb(a = None, b = None):
-    global db
-    con = sqlite3.connect(db)
-    cur = con.cursor()
-    cur.executescript('''
-
+def resetdb(update = None, context = None):
+    cur.execute('''
+    DROP SEQUENCE IF EXISTS id_seq;
     DROP TABLE IF EXISTS House;
     DROP TABLE IF EXISTS OG;
     DROP TABLE IF EXISTS Member;
     DROP TABLE IF EXISTS Queue;
+
+    CREATE SEQUENCE id_seq
+        INCREMENT 1
+        START 1;
 
     CREATE TABLE Member (
         chat_id INTEGER NOT NULL PRIMARY KEY UNIQUE,
@@ -28,7 +20,7 @@ def resetdb(a = None, b = None):
     );
 
     CREATE TABLE OG (
-        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+        id INTEGER NOT NULL PRIMARY KEY UNIQUE,
         chat_id INTEGER UNIQUE,
         house_id INTEGER,
         points INTEGER DEFAULT 0,
@@ -85,7 +77,7 @@ def resetdb(a = None, b = None):
     );
 
     CREATE TABLE House (
-        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+        id INTEGER NOT NULL PRIMARY KEY UNIQUE,
         name TEXT UNIQUE
     );
 
@@ -96,27 +88,29 @@ def resetdb(a = None, b = None):
         queue INTEGER
     );
 
-    INSERT INTO House (name) VALUES ('Ilent');
-    INSERT INTO House (name) VALUES ('Barg');
-    INSERT INTO House (name) VALUES ('Etlas');
-    INSERT INTO House (name) VALUES ('Aikon');
-    INSERT INTO House (name) VALUES ('Scioc');
-    INSERT INTO House (name) VALUES ('Trewitt')
+    INSERT INTO House VALUES (nextval('id_seq'), 'Ilent');
+    INSERT INTO House VALUES (nextval('id_seq'), 'Barg');
+    INSERT INTO House VALUES (nextval('id_seq'), 'Etlas');
+    INSERT INTO House VALUES (nextval('id_seq'), 'Aikon');
+    INSERT INTO House VALUES (nextval('id_seq'), 'Scioc');
+    INSERT INTO House VALUES (nextval('id_seq'), 'Trewitt');
+
+    ALTER SEQUENCE id_seq RESTART;
     ''')
 
     for house_id in range(1, 7):
         for og in range(6):
-            cur.execute(f'INSERT INTO OG (house_id) VALUES ({house_id})')
+            cur.execute(f"INSERT INTO OG (id, house_id) VALUES (nextval('id_seq'), {house_id})")
     for i in [ic1_id, ic2_id]:
-        cur.execute(f'INSERT OR IGNORE INTO Member (chat_id, og_id, perms) VALUES ({i}, 0, 3)')
+        cur.execute(f'INSERT INTO Member (chat_id, og_id, perms) VALUES ({i}, 0, 3)')
 
     con.commit()
-    cur.close()
     resetqns()
+    context.bot.sendMessage(update.effective_chat.id, "Reset Successful!")
 
 def resetqns():
     points_list = {
-        'g' : [10,20,10,10,10,10,20,20,10,20],
+        'g' : [10,20,10,10,10,20,20,20,10,30],
         'q' : [5,2,2,5,2,2,5,2,2,2,2,2,2,2,5],
         'r' : [5,5,5,10,5,5,2,5,5,2],
         'p' : [1,1,1,1,1,1,2,2,2,2,2,2,4,4,5]
@@ -125,18 +119,18 @@ def resetqns():
         'BreadTalk is Overrated i only go to ________',
         'Why is bread noisier than coffee?',
         '''In a mansion the owner of the house is murdered on a sunday morning. The inspector interviewed the gardener, the wife and the maid on what they are doing on the day of the murder.
-The gardener answered “I was attending the garden”
-The wife answered “I was in the kitchen preparing breakfast”
-The maid answered “I was collecting mail”
-On hearing the maid’s answer, the inspector immediately arrested the maid. Why?''',
+    The gardener answered “I was attending the garden”
+    The wife answered “I was in the kitchen preparing breakfast”
+    The maid answered “I was collecting mail”
+    On hearing the maid’s answer, the inspector immediately arrested the maid. Why?''',
         '''A burglar breaks into your house and holds your parents hostage. He tells you, “I will give you a chance to make a statement. If the statement is true, I will free your mother. If the statement is false, I will free your father. Then you will never see the other parent ever again. You cannot state a paradox or you will never see both parents again.” You say something and the burglar frees both parents. What was your statement?
 
-Note: A paradox is a statement that contradicts itself''',
+    Note: A paradox is a statement that contradicts itself''',
         'True or False: All of the balls in the bowl are blue',
         'The day before yesterday, Roy was 17. Next year, he will be 20. When is his birthday and what is today’s date?',
         'A family consists of two mothers, two daughters, one grandmother and one granddaughter. How many people are in the family?',
         '''Roy was watching television. Just after the midnight news here was a weather forecast: “It is raining now and will rain for the next 2 days. However, in 72 hours it will be bright and sunny.”
-“Wrong again”, snorted Roy. He was correct but how did he know?''',
+    “Wrong again”, snorted Roy. He was correct but how did he know?''',
         'A mute SOC graduate walks into a bar. They had a sign that wrote “10 pints of beer” and showed it to the bartender. Why did they stop the bartender when the 3rd pint was served?',
         'Where can you find the finest food in UTOWN?'
     ]
@@ -170,9 +164,11 @@ Note: A paradox is a statement that contradicts itself''',
         'SRC Level 2, outside Auditorium 2',
         'SRC Level 2, outside Flavours'
     ]
-    executescript('''DROP TABLE IF EXISTS Question;
+    executescript('''
+    ALTER SEQUENCE id_seq RESTART;
+    DROP TABLE IF EXISTS Question;
     CREATE TABLE Question (
-        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+        id INTEGER NOT NULL PRIMARY KEY UNIQUE,
         cat_id INTEGER,
         question_no INTEGER,
         display TEXT,
@@ -185,127 +181,76 @@ Note: A paradox is a statement that contradicts itself''',
         for question_no in range(1, rng):
             if cat != 'p':
                 display = riddles[question_no - 1] if cat == 'r' else (quizzes[question_no - 1] if cat == 'q' else locations[question_no - 1])
-                executescript(f'INSERT INTO Question (cat_id, question_no, display, points) VALUES ({cat_id}, {question_no}, "{display}", {points_list[cat][question_no - 1]})')
+                executescript(f"INSERT INTO Question (id, cat_id, question_no, display, points) VALUES (nextval('id_seq'), {cat_id}, {question_no}, '{display}', {points_list[cat][question_no - 1]})")
             else:
-                executescript(f'INSERT INTO Question (cat_id, question_no, points) VALUES ({cat_id}, {question_no}, {points_list[cat][question_no - 1]})')
+                executescript(f"INSERT INTO Question (id, cat_id, question_no, points) VALUES (nextval('id_seq'), {cat_id}, {question_no}, {points_list[cat][question_no - 1]})")
 
 def executescript(script):
-    global db
-    con = sqlite3.connect(db)
-    cur = con.cursor()
-    cur.executescript(script)
+    cur.execute(script)
     con.commit()
-    cur.close()
 
 def getogfromperson(chat_id):
-    global db
-    con = sqlite3.connect(db)
-    cur = con.cursor()
     cur.execute('''SELECT og_id FROM Member WHERE chat_id = {}'''.format(chat_id))
     res = cur.fetchone()
-    cur.close()
     return res[0] if res else res
 
 def getogfromgroup(chat_id):
-    global db
-    con = sqlite3.connect(db)
-    cur = con.cursor()
     cur.execute('''SELECT id FROM OG WHERE chat_id = {}'''.format(chat_id))
     res = cur.fetchone()
-    cur.close()
     return res[0] if res else res
 
 def getpoints(og_id):
-    global db
-    con = sqlite3.connect(db)
-    cur = con.cursor()
     cur.execute('''SELECT points FROM OG WHERE id = {}'''.format(og_id))
     res = cur.fetchone()
-    cur.close()
     return res[0]
 
 def checkqr(og_id, qr):
-    global db
-    con = sqlite3.connect(db)
-    cur = con.cursor()
     cur.execute('SELECT {} FROM OG WHERE id = {}'.format(qr, og_id))
     res = cur.fetchone()
-    cur.close()
     return res[0]
 
 def userexists(chat_id):
-    global db
-    con = sqlite3.connect(db)
-    cur = con.cursor()
     cur.execute('''SELECT chat_id from Member WHERE chat_id = {}'''.format(chat_id))
     res = cur.fetchall()
-    cur.close()
     return res
 
 def groupregistered(chat_id):
-    global db
-    con = sqlite3.connect(db)
-    cur = con.cursor()
     cur.execute('''SELECT chat_id from OG WHERE chat_id = {}'''.format(chat_id))
     res = cur.fetchall()
-    cur.close()
     return res
 
 def getogchatid(og_id):
-    global db
-    con = sqlite3.connect(db)
-    cur = con.cursor()
     cur.execute(f'SELECT chat_id FROM OG WHERE id = {og_id}')
     res = cur.fetchone()
-    cur.close()
     return res[0] if res else res
 
 def getsmchatid(game_id):
-    global db
-    con = sqlite3.connect(db)
-    cur = con.cursor()
     cur.execute(f'SELECT chat_id FROM Member WHERE og_id = {game_id} AND perms = 2')
     res = cur.fetchone()
-    cur.close()
     return res[0]
 
 def haveperms(chat_id, level):
-    global db
-    con = sqlite3.connect(db)
-    cur = con.cursor()
     cur.execute('''SELECT perms from Member WHERE chat_id = {}'''.format(chat_id))
     res = cur.fetchone()
-    cur.close()
     return (res[0] >= level if res else False)
 
 def getquestion(catandid):
-    global db
     cat = catandid[0]
     id = int(catandid[1:])
     cat_id = ['g', 'q', 'r', 'p'].index(cat) + 1
-    con = sqlite3.connect(db)
-    cur = con.cursor()
     cur.execute(f'''SELECT display from Question WHERE cat_id = {cat_id} AND question_no = {id}''')
     res = cur.fetchone()
-    cur.close()
     return res[0]
 
 def getrewards(catandid):
-    global db
     cat = catandid[0]
     id = int(catandid[1:])
     cat_id = ['g', 'q', 'r', 'p'].index(cat) + 1
-    con = sqlite3.connect(db)
-    cur = con.cursor()
     cur.execute(f'''SELECT points from Question WHERE cat_id = {cat_id} AND question_no = {id}''')
     res = cur.fetchone()
-    cur.close()
     return res[0]
 
 def getqueueforgame(game_id): # gets the queue of a specific station game
-    global db
-    con = sqlite3.connect(db)
-    cur = con.cursor()
     cur.execute(f'''SELECT
         og_id, queue
     FROM Queue
@@ -315,25 +260,16 @@ def getqueueforgame(game_id): # gets the queue of a specific station game
         queue ASC,
         time ASC''')
     res = cur.fetchall()
-    cur.close()
     return res
 
 def getqueueforog(og_id): # gets the stations queued by an OG
-    global db
-    con = sqlite3.connect(db)
-    cur = con.cursor()
     cur.execute(f'SELECT game_id, queue from Queue WHERE og_id = {og_id} ORDER BY queue ASC, time ASC')
     res = cur.fetchall()
-    cur.close()
     return res
 
 def getchatids():
-    global db
-    con = sqlite3.connect(db)
-    cur = con.cursor()
     cur.execute(f'SELECT chat_id from Member')
     res = cur.fetchall()
-    cur.close()
     return [i[0] for i in res]
 
 def og_ab(og_id): # in case we wanna format og names e.g. instead of og 7 maybe we have og B1
