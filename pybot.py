@@ -13,7 +13,7 @@ import psycopg2 as psql
 # TODO:
 # IC 3 and 4
 
-test = True
+test = False
 if test:
 	TOKEN = "1422003135:AAFM-i9eufmQxFKvzuOjO4xuPdT2cEujCvk" # test bot
 else:
@@ -29,7 +29,9 @@ ic1_id = 129464681 #chat_id of Zhekai
 ic2_id = 468173002 #chat_id of Jeremy
 
 # database things
-con = psql.connect(os.environ['DATABASE_URL'], sslmode='require')
+con = psql.connect(
+	'postgres://lgwebdrbepbdpn:032121d4f88b8b0a856b44528fd517b617545d51cd0eed96e12d5eebdd99991c@ec2-3-213-85-90.compute-1.amazonaws.com:5432/d48dfg33nbh8vl',
+	sslmode='require')
 cur = con.cursor()
 
 def error(update, context):
