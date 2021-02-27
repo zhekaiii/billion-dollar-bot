@@ -618,7 +618,7 @@ def decode_qr(update, context):
         logger.warning('NOT INSIDE!')
 
     try:
-        console.log(b64decode(decode(Image.open("test.jpg"))[0].data).decode("utf-8"))
+        logger.warning(b64decode(decode(Image.open("test.jpg"))[0].data).decode("utf-8"))
         result = decode(Image.open("qrcode.png"))
         decoded = b64decode(result[0].data).decode("utf-8")
         if decoded.startswith('RIDDLE'):
