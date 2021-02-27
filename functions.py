@@ -20,7 +20,7 @@ from base64 import b64decode
 from random import shuffle, choice
 
 from db import *
-from pybot import test, ic1_id, ic2_id, logger
+from pybot import test, ic1_id, ic2_id
 
 def help(update, context):
     # TODO: Help text for Station Masters
@@ -62,9 +62,12 @@ def start(update, context):
     chat_id = chat.id
     user_id = update.effective_user.id
     type = chat.type
-    if type == 'private' and not userexists(user_id):
-        text = 'Welcome!' if not full_name(update.effective_user) else 'Welcome, {}!'.format(full_name(update.effective_user))
-        text += ' Please await more instructions from your group chats!'
+    if type == 'private':
+        if not userexists(user_id):
+            text = 'Welcome!' if not full_name(update.effective_user) else 'Welcome, {}!'.format(full_name(update.effective_user))
+            text += ' Please await more instructions from your group chats!'
+        else:
+            text = 'If you\'re looking for the help text, it\'s /help.'
     elif type == 'group':
         if userexists(user_id) and (haveperms(user_id, 1) and (not haveperms(user_id, 2))):
             og_id = getogfromperson(user_id)
@@ -76,7 +79,11 @@ def start(update, context):
                     executescript(f'UPDATE OG SET chat_id = NULL WHERE id = {getogfromgroup(chat_id)}')
                 elif getogchatid(og_id) is None:
                     text = 'Group chat registered successfully.'
-            executescript(f'UPDATE OG SET chat_id = {chat_id} WHERE id = {og_id}')
+                executescript(f'UPDATE OG SET chat_id = {chat_id} WHERE id = {og_id}')
+            else:
+                text = 'You already did that! Perhaps you want to do /mainmenu instead?'
+        else:
+            text = 'You can\'t do that.'
     context.bot.sendMessage(chat_id, text)
 
 def register(update, context):

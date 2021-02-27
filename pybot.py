@@ -10,14 +10,13 @@ from functions import *
 import os, logging
 import psycopg2 as psql
 
-# TODO:
-# IC 3 and 4
+test = 'config.py' in os.listdir()
 
-test = False
 if test:
-	TOKEN = "1422003135:AAFM-i9eufmQxFKvzuOjO4xuPdT2cEujCvk" # test bot
+	from config import *
 else:
-	TOKEN = "1537124063:AAHbzWH70hf6Xa-_mRofarNHGubFdzq8VCA" # actual bot
+	TOKEN = os.environ['TELEGRAM_TOKEN']
+	DB_URL = os.environ['DATABASE_URL']
 	PORT = int(os.environ.get('PORT', 5000))
 
 # Enable logging
@@ -29,9 +28,7 @@ ic1_id = 129464681 #chat_id of Zhekai
 ic2_id = 468173002 #chat_id of Jeremy
 
 # database things
-con = psql.connect(
-	'postgres://lgwebdrbepbdpn:032121d4f88b8b0a856b44528fd517b617545d51cd0eed96e12d5eebdd99991c@ec2-3-213-85-90.compute-1.amazonaws.com:5432/d48dfg33nbh8vl',
-	sslmode='require')
+con = psql.connect(DB_URL, sslmode='prefer' if test else 'require')
 cur = con.cursor()
 
 def error(update, context):
@@ -64,15 +61,9 @@ def main():
 	if test:
 		updater.start_polling()
 	else:
-		updater.start_webhook(listen='0.0.0.0', port = int(PORT), url_path=TOKEN)
+		updater.start_webhook(listen='0.0.0.0', port = PORT, url_path = TOKEN)
 		updater.bot.setWebhook('https://quiet-tundra-35972.herokuapp.com/' + TOKEN)
 	updater.idle()
 
 if __name__ == '__main__':
-	try:
-		main()
-	except Exception as e:
-		logger.warning(e)
-		logger.warning('hello')
-		cur.close()
-		con.close()
+	main()
