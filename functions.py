@@ -612,13 +612,9 @@ def decode_qr(update, context):
 
     new_file = context.bot.get_file(foto.file_id)
     new_file.download("qrcode.png")
-    if 'qrcode.png' in os.listdir():
-        logger.warning('INSIDE!')
-    else:
-        logger.warning('NOT INSIDE!')
 
     try:
-        logger.warning(b64decode(decode(Image.open("test.jpg"))[0].data).decode("utf-8"))
+        logger.warning(Image.open("qrcode.png"))
         result = decode(Image.open("qrcode.png"))
         decoded = b64decode(result[0].data).decode("utf-8")
         if decoded.startswith('RIDDLE'):
