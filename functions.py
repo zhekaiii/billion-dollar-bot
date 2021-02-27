@@ -20,7 +20,7 @@ from base64 import b64decode
 from random import shuffle, choice
 
 from db import *
-from pybot import test, ic1_id, ic2_id
+from pybot import test, ic1_id, ic2_id, logger
 
 def help(update, context):
     # TODO: Help text for Station Masters
@@ -627,7 +627,7 @@ def decode_qr(update, context):
         else:
             1/0
     except Exception as e:
-        print(e)
+        logger.warning(e)
         fun_text = [
             'Try retaking the picture and do a better job at it this time!',
             'Don\'t know how to take picture properly is it?',
