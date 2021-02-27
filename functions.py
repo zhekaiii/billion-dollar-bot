@@ -614,7 +614,6 @@ def decode_qr(update, context):
     new_file.download("qrcode.png")
 
     try:
-        logger.warning(Image.open("qrcode.png"))
         result = decode(Image.open("qrcode.png"))
         decoded = b64decode(result[0].data).decode("utf-8")
         if decoded.startswith('RIDDLE'):
