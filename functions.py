@@ -4,18 +4,15 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from telegram.ext import Updater, Filters, CommandHandler, MessageHandler, CallbackQueryHandler, CallbackContext
 
-# QR Code
-from pyzbar.pyzbar import decode
+# For QR Code decoding
+import requests
+from base64 import b64decode
 
 # System libraries
 import os
 from os import listdir
 from os.path import isfile, join
 from datetime import datetime
-
-from io import BytesIO
-from PIL import Image
-from base64 import b64decode
 
 from random import shuffle, choice
 
@@ -614,8 +611,14 @@ def decode_qr(update, context):
     new_file.download("qrcode.png")
 
     try:
-        result = decode(Image.open("qrcode.png"))
-        decoded = b64decode(result[0].data).decode("utf-8")
+        with open('qrcode.png', 'rb') as f:
+            response = requests.post(
+                'http://api.qrserver.com/v1/read-qr-code/?file',
+                files = {
+                    'file': f
+                }
+            )
+        decoded = b64decode(response.json()[0]['symbol'][0]['data']).decode("utf-8")
         if decoded.startswith('RIDDLE'):
             unlockriddle(int(decoded[7:]), update, context)
         elif decoded.startswith('QUIZ'):
