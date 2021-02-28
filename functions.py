@@ -584,22 +584,23 @@ def button(update, context):
 
 def decode_qr(update, context):
     chat_id = update.message.chat_id
-    if not userexists(chat_id) or not haveperms(chat_id, 1): # Level 0 cannot send QR codes
-        context.bot.sendMessage(chat_id, 'Only OGLs can send me QR codes!')
-        return
-    if haveperms(chat_id, 2): # Level 2 clearance or higher means not in any OG, so no need scan QR code
-        context.bot.sendMessage(chat_id, 'You don\'t belong to any OGs! You don\'t need to send me QR codes!')
-        return
-    if getogchatid(getogfromperson(chat_id)) == None:
-        context.bot.sendMessage(chat_id, 'Please send /start in your group chat to register the group chat into the database!')
-        return
-    q = getqueueforog(getogfromperson(chat_id))
-    if q:
-        og_id = getogfromperson(chat_id)
-        gq = getqueueforgame(q[0][0])
-        if gq[0][0] == og_id or (gq[0][1] == 0 and gq[1][0] == og):
-            context.bot.sendMessage(chat_id, 'Your OG is queueing for a station game. You cannot scan QR codes!')
+    if update.message.caption != '/test':
+        if not userexists(chat_id) or not haveperms(chat_id, 1): # Level 0 cannot send QR codes
+            context.bot.sendMessage(chat_id, 'Only OGLs can send me QR codes!')
             return
+        if haveperms(chat_id, 2): # Level 2 clearance or higher means not in any OG, so no need scan QR code
+            context.bot.sendMessage(chat_id, 'You don\'t belong to any OGs! You don\'t need to send me QR codes!')
+            return
+        if getogchatid(getogfromperson(chat_id)) == None:
+            context.bot.sendMessage(chat_id, 'Please send /start in your group chat to register the group chat into the database!')
+            return
+        q = getqueueforog(getogfromperson(chat_id))
+        if q:
+            og_id = getogfromperson(chat_id)
+            gq = getqueueforgame(q[0][0])
+            if gq[0][0] == og_id or (gq[0][1] == 0 and gq[1][0] == og):
+                context.bot.sendMessage(chat_id, 'Your OG is queueing for a station game. You cannot scan QR codes!')
+                return
     if update.message.photo:
         id_img = update.message.photo[-1].file_id
     else:
@@ -619,7 +620,9 @@ def decode_qr(update, context):
                 }
             )
         decoded = b64decode(response.json()[0]['symbol'][0]['data']).decode("utf-8")
-        if decoded.startswith('RIDDLE'):
+        if update.message.caption == '/test':
+            context.bot.sendMessage(chat_id, decoded)
+        elif decoded.startswith('RIDDLE'):
             unlockriddle(int(decoded[7:]), update, context)
         elif decoded.startswith('QUIZ'):
             unlockquiz(int(decoded[5:]), update, context)
@@ -632,20 +635,20 @@ def decode_qr(update, context):
     except Exception as e:
         logger.warning(e)
         fun_text = [
-            'Try retaking the picture and do a better job at it this time!',
             'Don\'t know how to take picture properly is it?',
             'Your phototaking skills need some work.',
             'You should really take up photography lessons.',
             'Are you sure you sent me a QR code?',
             'Is the lighting bad or is it just your skills?',
             'Is the camera bad or is it just your skills?',
-            'A 4-year-old can do better than you. Shame on you.',
+            'A primary school kid can take better pictures than you.',
             'I guess I\'m just picky.',
             'Because you can\'t take pictures properly, -100 Favour Points!',
             'Did you scan a SafeEntry QR code by mistake?',
-            'I didn\'t ask for irrelevant pictures.'
+            'I didn\'t ask for irrelevant pictures.',
+            'Eh ask you take picture of QR Code not take yourself.'
         ]
-        context.bot.sendMessage(chat_id=chat_id, text=f'Unable to detect valid QR code. {choice(fun_text)}')
+        context.bot.sendMessage(chat_id=chat_id, text=f'Unable to detect valid QR code. {choice(fun_text)} Try again.')
     os.remove("qrcode.png")
 
 def addpts(og_id, amt):
