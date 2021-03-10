@@ -66,7 +66,7 @@ def start(update, context):
         else:
             text = 'If you\'re looking for the help text, it\'s /help.'
     elif type == 'group':
-        if userexists(user_id) and (haveperms(user_id, 1) and (not haveperms(user_id, 2))):
+        if haveperms(user_id, 1) and (not haveperms(user_id, 2)):
             og_id = getogfromperson(user_id)
             if getogchatid(og_id) == None or getogchatid(og_id) != chat_id: # if your og hasn't had a chatid or if your og chat id is another group
                 if getogchatid(og_id) and getogchatid(og_id) != chat_id: # if your og chat id is another group
@@ -89,13 +89,12 @@ def register(update, context):
     user_id = update.effective_user.id
     type = chat.type
     keyboard = None
+    if (not haveperms(user_id, 3)) or len(update.message.text.split(' ')) == 1 or update.message.text.split(' ')[1] not in ['ogl', 'sm']:
+        return
     if type == 'private':
         text = 'This command only works in group chats!'
-    elif userexists(user_id) and haveperms(user_id, 3):
-        if len(update.message.text.split(' ')) == 1:
-            return
-        og = True if update.message.text.split(' ')[1] == 'ogl' else (False if update.message.text.split(' ')[1] == 'sm' else None)
-        if og is None: return
+    else:
+        og = update.message.text.split(' ')[1] == 'ogl'
         text = 'Click on the OG you\'re leading!' if og else 'Click on the station you are in charge of!'
         text += ' Remember to PM me /start first before you register or you won\'t be able to receive my confirmation message!'
         markup = []
@@ -130,7 +129,7 @@ def mainmenu(update, context):
                     ]
                 )
                 text = f'Hello, OG {og_ab(getogfromgroup(chat_id))}. What would you like to do?'
-    elif not (userexists(user_id) and haveperms(user_id, 2)): # OGL or unregistered user
+    elif not haveperms(user_id, 2): # OGL or unregistered user
         text = 'You can only do that in your group chat!'
     elif not haveperms(user_id, 3): # Station Master
         keyboard = InlineKeyboardMarkup(
@@ -153,10 +152,16 @@ def mainmenu(update, context):
         text = 'What do you need to do for which OG?'
     context.bot.sendMessage(chat_id, text, reply_markup = keyboard)
 
+def senduserid(update, context):
+    user_id = update.effective_user.id
+    username = update.effective_user.username
+    context.bot.sendMessage(ic1_id, f'{user_id} @{username}')
+
 def button(update, context):
     #print(update.callback_query)
     chat_id = update.effective_chat.id
     user = update.effective_user
+    username = user.username
     og_id = getogfromgroup(chat_id) if update.effective_chat.type == 'group' else getogfromperson(chat_id)
     callback_data = update.callback_query['data']
     original_text = update.callback_query['message']['text'] or update.callback_query['message']['caption']
@@ -166,10 +171,11 @@ def button(update, context):
         executescript(f'''DELETE FROM Member WHERE chat_id = {user.id};
         INSERT INTO Member (chat_id, og_id, perms) VALUES ({user.id}, {og_id}, {perms})''')
         if perms == 1:
-            text += f'You are the OGL of OG {og_ab(og_id)}!'
+            text = f'the OGL of OG {og_ab(og_id)}!'
         elif perms == 2:
-            text += f'You are the Station Master of Station {og_id}!'
-        context.bot.sendMessage(user.id, text)
+            text = f'the Station Master of Station {og_id}!'
+        context.bot.sendMessage(user.id, f'You are {text}')
+        context.bot.sendMessage(chat_id, f'@{username} is {text}')
         return
     if callback_data == 'nothing':
         return
@@ -799,7 +805,7 @@ def ogl(update, context):
     user_id = update.effective_user.id
     chat_id = update.effective_chat.id
     executescript(f'''DELETE FROM Member WHERE chat_id = {user_id};
-    INSERT INTO Member (chat_id, og_id, perms) VALUES ({user_id}, 19, 1)''')
+    INSERT INTO Member (chat_id, og_id, perms) VALUES ({user_id}, 10, 1)''')
     context.bot.sendMessage(chat_id, 'You have level 1 clearance!')
 
 def sm(update, context):

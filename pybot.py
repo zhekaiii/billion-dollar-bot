@@ -44,6 +44,7 @@ def main():
 	dp.add_handler(CommandHandler('mainmenu', mainmenu))
 	dp.add_handler(CommandHandler('help', help))
 	dp.add_handler(CommandHandler('user', changeuser))
+	dp.add_handler(CommandHandler('senduserid', senduserid))
 	dp.add_handler(MessageHandler(Filters.photo, decode_qr))
 	dp.add_handler(MessageHandler(Filters.reply, confirmans))
 	dp.add_handler(CallbackQueryHandler(button))
@@ -63,6 +64,7 @@ def main():
 	else:
 		updater.start_webhook(listen='0.0.0.0', port = PORT, url_path = TOKEN)
 		updater.bot.setWebhook('https://quiet-tundra-35972.herokuapp.com/' + TOKEN)
+	updater.bot.sendMessage(ic1_id, 'Up and running!')
 	updater.idle()
 
 if __name__ == '__main__':
