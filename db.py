@@ -1,5 +1,5 @@
 import psycopg2 as psql
-from pybot import ic1_id, ic2_id, cur, con
+from pybot import ic1_id, ic2_id, ic3_id, ic4_id, cur, con
 
 def resetdb(update = None, context = None):
     cur.execute('''
@@ -101,7 +101,7 @@ def resetdb(update = None, context = None):
     for house_id in range(1, 7):
         for og in range(6):
             cur.execute(f"INSERT INTO OG (id, house_id) VALUES (nextval('id_seq'), {house_id})")
-    for i in [ic1_id, ic2_id]:
+    for i in [ic1_id, ic2_id, ic3_id, ic4_id]:
         cur.execute(f'INSERT INTO Member (chat_id, og_id, perms) VALUES ({i}, 0, 3)')
 
     con.commit()
