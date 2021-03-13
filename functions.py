@@ -433,14 +433,13 @@ def button(update, context):
             context.bot.sendMessage(chat_id, 'You have run out of attempts!')
         mainmenu(update, context)
     elif callback_data.startswith('sendans'):
-        id = callback_data.split('.')[1]
+        id = int(callback_data.split('.')[1])
         answering_og = int(callback_data.split('.')[2])
         attempts = checkqr(answering_og, f'r{id}')
         ans = f'<u>Riddle {id}</u>\n'
         ans += getquestion(f'r{id}')
         ans += f'\nOG {og_ab(answering_og)}'
         ans += '\nAnswer: ' + original_text.split('\n')[1]
-        logger.warning(f"{original_text.split('\n')}")
         keyboard = InlineKeyboardMarkup([[
             InlineKeyboardButton('Accept', callback_data = 'accept.{}.{}'.format(id, answering_og)),
             InlineKeyboardButton('Reject', callback_data = 'reject.{}.{}'.format(id, answering_og))
