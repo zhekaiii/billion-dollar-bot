@@ -445,12 +445,13 @@ def button(update, context):
             InlineKeyboardButton('Reject', callback_data = 'reject.{}.{}'.format(id, answering_og))
         ]])
         if id < 5:
-            context.bot.sendMessage(ic1_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML)
-            #context.bot.sendMessage(ic2_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML)
+            #context.bot.sendMessage(ic1_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML)
+            context.bot.sendMessage(ic2_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML)
+        elif id <= 8:
+            #context.bot.sendMessage(ic1_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML) # for testing purposes
+            context.bot.sendMessage(ic3_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML)
         else:
-            context.bot.sendMessage(ic1_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML) # for testing purposes
-            #context.bot.sendMessage(ic3_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML)
-            #context.bot.sendMessage(ic4_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML)
+            context.bot.sendMessage(ic4_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML)
         context.bot.sendMessage(chat_id, original_text)
         context.bot.sendMessage(chat_id, 'Answer sent! Please wait for the response.')
         mainmenu(update, context)
