@@ -437,8 +437,11 @@ def button(update, context):
         answering_og = int(callback_data.split('.')[2])
         attempts = checkqr(answering_og, f'r{id}')
         ans = f'<u>Riddle {id}</u>\n'
+        logger.warning('hello')
         ans += getquestion(f'r{id}')
+        logger.warning('hello')
         ans += f'\nOG {og_ab(answering_og)}'
+        logger.warning('hello')
         ans += '\nAnswer: ' + original_text.split('\n')[1]
         keyboard = InlineKeyboardMarkup([[
             InlineKeyboardButton('Accept', callback_data = 'accept.{}.{}'.format(id, answering_og)),
