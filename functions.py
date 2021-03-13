@@ -112,11 +112,12 @@ def mainmenu(update, context):
     user_id = update.effective_user.id
     keyboard = None
     if update.effective_chat.type == 'group':
-        if not userexists(user_id) or haveperms(user_id, 3) or not haveperms(user_id, 2): # Unregistered user or head or OGL
+        if not userexists(user_id) or not haveperms(user_id, 2): # Unregistered user or head or OGL
             if not groupregistered(chat_id):
-                if userexists(user_id) and haveperms(user_id, 1) and not haveperms(user_id, 3):
+                if haveperms(user_id, 1):
                     start(update, context)
                     mainmenu(update, context)
+                    return
                 else:
                     text = 'OGL, please type /start!'
             else:
