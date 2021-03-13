@@ -440,7 +440,7 @@ def button(update, context):
         ans += getquestion(f'r{id}')
         ans += f'\nOG {og_ab(answering_og)}'
         ans += '\nAnswer: ' + original_text.split('\n')[1]
-        logger.warning(f'{original_text.split('\n')[1]}')
+        logger.warning(f"{original_text.split('\n')}")
         keyboard = InlineKeyboardMarkup([[
             InlineKeyboardButton('Accept', callback_data = 'accept.{}.{}'.format(id, answering_og)),
             InlineKeyboardButton('Reject', callback_data = 'reject.{}.{}'.format(id, answering_og))
