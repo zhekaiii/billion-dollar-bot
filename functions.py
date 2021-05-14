@@ -26,7 +26,6 @@ def help(update, context):
         if userexists(chat_id) and haveperms(chat_id, 3): # IC
             text = '/mainmenu - Brings up the main menu where you have master control over everything!\n'
             text += '/user &#60;username&#62; &#60;og/station&#62; &#60;clearance level&#62; - Changes the OG/Station and/or clearance level for the user. The user must be registered in the database!\n'
-            text += 'Level 0: Freshie\n'
             text += 'Level 1: OGL\n'
             text += 'Level 2: Station Master\n\n'
             text += 'You can lock/unlock QR codes, +/- attempts for quizzes and riddles and +/- points for whichever OG you want.'
@@ -175,8 +174,11 @@ def button(update, context):
             text = f'the OGL of OG {og_ab(og_id)}!'
         elif perms == 2:
             text = f'the Station Master of Station {og_id}!'
-        context.bot.sendMessage(user.id, f'You are {text}')
         context.bot.sendMessage(chat_id, f'@{username} is {text}')
+        try:
+            context.bot.sendMessage(user.id, f'You are {text}')
+        except:
+            pass
         return
     if callback_data == 'nothing':
         return
@@ -451,7 +453,7 @@ def button(update, context):
         else:
             #context.bot.sendMessage(ic1_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML) # for testing purposes
             context.bot.sendMessage(ic3_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML)
-            context.bot.sendMessage(ic4_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML)
+            #context.bot.sendMessage(ic4_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML)
         context.bot.sendMessage(chat_id, original_text)
         context.bot.sendMessage(chat_id, 'Answer sent! Please wait for the response.')
         mainmenu(update, context)
@@ -675,10 +677,14 @@ def unlockriddle(id, update, context):
     og_chat = getogchatid(og_id)
     if id == 5:
         attempts = 1
-    elif id == 7:
+    elif id in [7, 10]:
         attempts = 2
-    else:
+    elif id in [1, 2]:
+        attempts = 3
+    elif id == 9:
         attempts = 5
+    else:
+        attempts = 10
     if checkqr(og_id, 'r{}'.format(id)) > -1:
         context.bot.sendMessage(user_id, 'You have already scanned this QR Code!')
         return

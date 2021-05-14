@@ -10,6 +10,10 @@ from functions import *
 import os, logging
 import psycopg2 as psql
 
+# Defer
+from contextlib import ExitStack
+from functools import partial
+
 test = 'config.py' in os.listdir()
 
 if test:
@@ -65,9 +69,12 @@ def main():
 		updater.start_polling()
 	else:
 		updater.start_webhook(listen='0.0.0.0', port = PORT, url_path = TOKEN)
-		updater.bot.setWebhook('https://quiet-tundra-35972.herokuapp.com/' + TOKEN)
-	updater.bot.sendMessage(ic1_id, 'Up and running!')
-	updater.idle()
+		updater.bot.setWebhook('https://nbdi-bot.herokuapp.com/' + TOKEN)
+	# updater.bot.sendMessage(ic1_id, 'Up and running!') # got too annoying
+	with ExitStack() as stack:
+		stack.callback(con.close)
+		stack.callback(cur.close)
+		updater.idle()
 
 if __name__ == '__main__':
-	main()
+    main()

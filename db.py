@@ -110,7 +110,18 @@ def resetdb(update = None, context = None):
 
 def resetqns():
     points_list = {
-        'g' : [10,20,10,10,10,20,20,20,10,30],
+        'g' : [
+                10, # Floor is Lava
+                20, # The Right Turn
+                40, # Tea Party
+                10, # Tilt-A-Cup
+                10, # Hula-Hoop Chain
+                20, # Back Flip
+                20, # The Swinger
+                20, # Taste the Rainbow
+                20, # Discordance
+                30 # Stack Overflow
+            ],
         'q' : [5,2,2,5,2,2,5,2,2,2,2,2,2,2,5],
         'r' : [5,5,5,10,5,5,2,5,5,2],
         'p' : [1,1,1,1,1,1,2,2,2,2,2,2,4,4,5]
