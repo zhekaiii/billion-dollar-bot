@@ -4,17 +4,17 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Updater, Filters, CommandHandler, MessageHandler, CallbackQueryHandler, CallbackContext
 
-# Telegram Functions
-from functions import *
-
 import os, logging
 import psycopg2 as psql
+test = 'config.py' in os.listdir()
+
+# Telegram Functions
+from functions import *
 
 # Defer
 from contextlib import ExitStack
 from functools import partial
 
-test = 'config.py' in os.listdir()
 
 if test:
 	from config import *

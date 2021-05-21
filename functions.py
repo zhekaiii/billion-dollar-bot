@@ -624,17 +624,18 @@ def decode_qr(update, context):
     foto = context.bot.getFile(id_img)
 
     new_file = context.bot.get_file(foto.file_id)
-    new_file.download("qrcode.png")
+    f = io.BytesIO()
+    new_file.download(out = f)
 
     try:
-        with open('qrcode.png', 'rb') as f:
-            response = requests.post(
-                'http://api.qrserver.com/v1/read-qr-code/?file',
-                files = {
-                    'file': f
-                }
-            )
+        response = requests.post(
+            'http://api.qrserver.com/v1/read-qr-code/?file',
+            files = {
+                'file': f
+            }
+        )
         decoded = b64decode(response.json()[0]['symbol'][0]['data']).decode("utf-8")
+        f.close()
         if update.message.caption == '/test':
             context.bot.sendMessage(chat_id, decoded)
         elif decoded.startswith('RIDDLE'):
