@@ -1,270 +1,340 @@
 import psycopg2 as psql
-from pybot import ic1_id, ic2_id, ic3_id, ic4_id, cur, con
+import csv
+from pybot import ic1_id, ic2_id, ic3_id, ic4_id, cur, con, logger
 
-def resetdb(update = None, context = None):
+def dropdb():
     cur.execute('''
-    DROP SEQUENCE IF EXISTS id_seq;
-    DROP TABLE IF EXISTS House;
-    DROP TABLE IF EXISTS OG;
-    DROP TABLE IF EXISTS Member;
-    DROP TABLE IF EXISTS Queue;
+    DROP TABLE IF EXISTS house CASCADE;
+    DROP TABLE IF EXISTS og CASCADE;
+    DROP TABLE IF EXISTS member;
+    DROP TABLE IF EXISTS queue;
+    DROP TABLE IF EXISTS quiz CASCADE;
+    DROP TABLE IF EXISTS riddle CASCADE;
+    DROP TABLE IF EXISTS game CASCADE;
+    DROP TABLE IF EXISTS point CASCADE;
+    DROP TABLE IF EXISTS quiz_og;
+    DROP TABLE IF EXISTS riddle_og;
+    DROP TABLE IF EXISTS game_og;
+    DROP TABLE IF EXISTS point_og;
 
-    CREATE SEQUENCE id_seq
-        INCREMENT 1
-        START 1;
-
-    CREATE TABLE Member (
-        chat_id INTEGER NOT NULL PRIMARY KEY UNIQUE,
-        og_id INTEGER,
-        perms INTEGER DEFAULT 0
-    );
-
-    CREATE TABLE OG (
-        id INTEGER NOT NULL PRIMARY KEY UNIQUE,
-        chat_id INTEGER UNIQUE,
-        house_id INTEGER,
-        points INTEGER DEFAULT 0,
-        r1 INTEGER DEFAULT -1,
-        r2 INTEGER DEFAULT -1,
-        r3 INTEGER DEFAULT -1,
-        r4 INTEGER DEFAULT -1,
-        r5 INTEGER DEFAULT -1,
-        r6 INTEGER DEFAULT -1,
-        r7 INTEGER DEFAULT -1,
-        r8 INTEGER DEFAULT -1,
-        r9 INTEGER DEFAULT -1,
-        r10 INTEGER DEFAULT -1,
-        q1 INTEGER DEFAULT -1,
-        q2 INTEGER DEFAULT -1,
-        q3 INTEGER DEFAULT -1,
-        q4 INTEGER DEFAULT -1,
-        q5 INTEGER DEFAULT -1,
-        q6 INTEGER DEFAULT -1,
-        q7 INTEGER DEFAULT -1,
-        q8 INTEGER DEFAULT -1,
-        q9 INTEGER DEFAULT -1,
-        q10 INTEGER DEFAULT -1,
-        q11 INTEGER DEFAULT -1,
-        q12 INTEGER DEFAULT -1,
-        q13 INTEGER DEFAULT -1,
-        q14 INTEGER DEFAULT -1,
-        q15 INTEGER DEFAULT -1,
-        g1 INTEGER DEFAULT -1,
-        g2 INTEGER DEFAULT -1,
-        g3 INTEGER DEFAULT -1,
-        g4 INTEGER DEFAULT -1,
-        g5 INTEGER DEFAULT -1,
-        g6 INTEGER DEFAULT -1,
-        g7 INTEGER DEFAULT -1,
-        g8 INTEGER DEFAULT -1,
-        g9 INTEGER DEFAULT -1,
-        g10 INTEGER DEFAULT -1,
-        p1 INTEGER DEFAULT -1,
-        p2 INTEGER DEFAULT -1,
-        p3 INTEGER DEFAULT -1,
-        p4 INTEGER DEFAULT -1,
-        p5 INTEGER DEFAULT -1,
-        p6 INTEGER DEFAULT -1,
-        p7 INTEGER DEFAULT -1,
-        p8 INTEGER DEFAULT -1,
-        p9 INTEGER DEFAULT -1,
-        p10 INTEGER DEFAULT -1,
-        p11 INTEGER DEFAULT -1,
-        p12 INTEGER DEFAULT -1,
-        p13 INTEGER DEFAULT -1,
-        p14 INTEGER DEFAULT -1,
-        p15 INTEGER DEFAULT -1
-    );
-
-    CREATE TABLE House (
+    CREATE TABLE house (
         id INTEGER NOT NULL PRIMARY KEY UNIQUE,
         name TEXT UNIQUE
     );
 
-    CREATE TABLE Queue (
-        og_id INTEGER,
-        game_id INTEGER,
-        time INTEGER,
-        queue INTEGER
+    CREATE TABLE og (
+        id INTEGER NOT NULL,
+        chat_id INTEGER UNIQUE,
+        house_id INTEGER,
+        points INTEGER DEFAULT 0,
+        name TEXT DEFAULT NULL,
+
+        UNIQUE (id, house_id),
+        FOREIGN KEY (house_id) REFERENCES house(id)
     );
 
-    INSERT INTO House VALUES (nextval('id_seq'), 'Ilent');
-    INSERT INTO House VALUES (nextval('id_seq'), 'Barg');
-    INSERT INTO House VALUES (nextval('id_seq'), 'Etlas');
-    INSERT INTO House VALUES (nextval('id_seq'), 'Aikon');
-    INSERT INTO House VALUES (nextval('id_seq'), 'Scioc');
-    INSERT INTO House VALUES (nextval('id_seq'), 'Trewitt');
+    CREATE TABLE quiz (
+        id INTEGER NOT NULL PRIMARY KEY UNIQUE,
+        text TEXT NOT NULL UNIQUE,
+        answer TEXT NOT NULL,
+        fake1 TEXT NOT NULL,
+        fake2 TEXT NOT NULL,
+        fake3 TEXT NOT NULL,
+        image_url TEXT DEFAULT NULL,
+        points INTEGER NOT NULL
+    );
 
-    ALTER SEQUENCE id_seq RESTART;
-    ''')
+    CREATE TABLE riddle (
+        id INTEGER NOT NULL PRIMARY KEY UNIQUE,
+        text TEXT NOT NULL UNIQUE,
+        points INT NOT NULL,
+        image_url TEXT DEFAULT NULL,
+        attempts INTEGER NOT NULL
+    );
 
-    for house_id in range(1, 7):
-        for og in range(6):
-            cur.execute(f"INSERT INTO OG (id, house_id) VALUES (nextval('id_seq'), {house_id})")
-    for i in [ic1_id, ic2_id, ic3_id, ic4_id]:
-        cur.execute(f'INSERT INTO Member (chat_id, og_id, perms) VALUES ({i}, 0, 3)')
+    CREATE TABLE point (
+        id INTEGER NOT NULL PRIMARY KEY UNIQUE,
+        points INTEGER NOT NULL
+    );
 
+    CREATE TABLE game (
+        id INTEGER NOT NULL PRIMARY KEY UNIQUE,
+        location TEXT NOT NULL,
+        title TEXT NOT NULL UNIQUE,
+        points INTEGER NOT NULL
+    );
+
+    CREATE TABLE member (
+        chat_id INTEGER NOT NULL PRIMARY KEY UNIQUE,
+        og_id INTEGER DEFAULT NULL,
+        house_id INTEGER DEFAULT NULL,
+        game_id INTEGER DEFAULT NULL,
+        perms INTEGER NOT NULL,
+
+        FOREIGN KEY (og_id, house_id) REFERENCES og(id, house_id),
+        FOREIGN KEY (game_id) REFERENCES game(id)
+    );
+
+    CREATE TABLE queue (
+        og_id INTEGER NOT NULL,
+        house_id INTEGER NOT NULL,
+        game_id INTEGER,
+        time TIMESTAMP DEFAULT NOW(),
+        queue INTEGER,
+
+        UNIQUE (game_id, og_id, house_id),
+        FOREIGN KEY (og_id, house_id) REFERENCES og(id, house_id),
+        FOREIGN KEY (game_id) REFERENCES game(id)
+    );
+
+    CREATE TABLE game_og (
+        game_id INTEGER NOT NULL,
+        og_id INTEGER NOT NULL,
+        house_id INTEGER NOT NULL,
+        unlocked BOOLEAN NOT NULL DEFAULT FALSE,
+        completed BOOLEAN NOT NULL DEFAULT FALSE,
+        first BOOLEAN NOT NULL DEFAULT TRUE,
+
+        UNIQUE (game_id, og_id, house_id),
+        FOREIGN KEY (og_id, house_id) REFERENCES og(id, house_id),
+        FOREIGN KEY (game_id) REFERENCES game(id)
+    );
+
+    CREATE TABLE quiz_og (
+        quiz_id INTEGER NOT NULL,
+        og_id INTEGER NOT NULL,
+        house_id INTEGER NOT NULL,
+        unlocked BOOLEAN NOT NULL DEFAULT FALSE,
+        completed BOOLEAN NOT NULL DEFAULT FALSE,
+        attempts INTEGER NOT NULL DEFAULT 2,
+
+        UNIQUE (quiz_id, og_id, house_id),
+        FOREIGN KEY (og_id, house_id) REFERENCES og(id, house_id),
+        FOREIGN KEY (quiz_id) REFERENCES quiz(id)
+    );
+
+    CREATE TABLE riddle_og (
+        riddle_id INTEGER NOT NULL,
+        og_id INTEGER NOT NULL,
+        house_id INTEGER NOT NULL,
+        unlocked BOOLEAN NOT NULL DEFAULT FALSE,
+        completed BOOLEAN NOT NULL DEFAULT FALSE,
+        attempts INTEGER DEFAULT 0,
+
+        UNIQUE (riddle_id, og_id, house_id),
+        FOREIGN KEY (og_id, house_id) REFERENCES og(id, house_id),
+        FOREIGN KEY (riddle_id) REFERENCES riddle(id)
+    );
+
+    CREATE TABLE point_og (
+        point_id INTEGER NOT NULL,
+        og_id INTEGER NOT NULL,
+        house_id INTEGER NOT NULL,
+        unlocked BOOLEAN NOT NULL DEFAULT FALSE,
+
+        UNIQUE (point_id, og_id, house_id),
+        FOREIGN KEY (og_id, house_id) REFERENCES og(id, house_id),
+        FOREIGN KEY (point_id) REFERENCES point(id)
+    )''')
+
+def cleardb():
+    cur.execute('''
+    DELETE FROM house;
+    DELETE FROM og;
+    DELETE FROM member;
+    DELETE FROM queue;
+    DELETE FROM quiz;
+    DELETE FROM riddle;
+    DELETE FROM game;
+    DELETE FROM point;
+    DELETE FROM quiz_og;
+    DELETE FROM riddle_og;
+    DELETE FROM game_og;
+    DELETE FROM point_og;''')
     con.commit()
+
+def resetdb(update = None, context = None):
+    msg = context.bot.sendMessage(update.effective_chat.id, "Hold on...")
+    cleardb()
+
+    with open('house.csv', encoding = 'latin-1') as f:
+        rows = list(csv.reader(f, delimiter = ','))
+    header = rows.pop(0)
+    for row in rows:
+        cur.execute(f"""
+            INSERT INTO house ({', '.join(header)})
+            VALUES ({row[0]}, '{row[1]}')
+        """)
+        
+    txt = ''
+    for house_id in range(1, 7):
+        for og in range(1, 7):
+            txt += f"""INSERT INTO og (id, house_id) VALUES ({og}, {house_id});"""
+    for i in [ic1_id, ic2_id, ic3_id, ic4_id]:
+        txt += f'INSERT INTO member (chat_id, perms) VALUES ({i}, 3);'
+    cur.execute(txt)
+
     resetqns()
-    context.bot.sendMessage(update.effective_chat.id, "Reset Successful!")
+    resetqr()
+
+    msg.edit_text("Reset Successful!")
 
 def resetqns():
-    points_list = {
-        'g' : [
-                10, # Floor is Lava
-                20, # The Right Turn
-                40, # Tea Party
-                10, # Tilt-A-Cup
-                10, # Hula-Hoop Chain
-                20, # Back Flip
-                20, # The Swinger
-                20, # Taste the Rainbow
-                20, # Discordance
-                30 # Stack Overflow
-            ],
-        'q' : [5,2,2,5,2,2,5,2,2,2,2,2,2,2,5],
-        'r' : [5,5,5,10,5,5,2,5,5,2],
-        'p' : [1,1,1,1,1,1,2,2,2,2,2,2,4,4,5]
-    }
-    riddles = [
-        'BreadTalk is Overrated i only go to ________',
-        'Why is bread noisier than coffee?',
-        '''In a mansion the owner of the house is murdered on a sunday morning. The inspector interviewed the gardener, the wife and the maid on what they are doing on the day of the murder.
-    The gardener answered “I was attending the garden”
-    The wife answered “I was in the kitchen preparing breakfast”
-    The maid answered “I was collecting mail”
-    On hearing the maid’s answer, the inspector immediately arrested the maid. Why?''',
-        '''A burglar breaks into your house and holds your parents hostage. He tells you, “I will give you a chance to make a statement. If the statement is true, I will free your mother. If the statement is false, I will free your father. Then you will never see the other parent ever again. You cannot state a paradox or you will never see both parents again.” You say something and the burglar frees both parents. What was your statement?
+    with open('game.csv', encoding = 'latin-1') as f:
+        rows = list(csv.reader(f, delimiter = ','))
+    header = rows.pop(0)
+    txt = ''
+    for row in rows:
+        row = [r.replace("'", "''") for r in row]
+        txt += f"""
+            INSERT INTO game ({', '.join(header)})
+            VALUES ({row[0]}, '{row[1]}', '{row[2]}', {row[3]})
+            ON CONFLICT (id)
+                DO UPDATE SET
+                    {header[1]} = '{row[1]}',
+                    {header[2]} = '{row[2]}',
+                    {header[3]} = {row[3]}
+                WHERE game.id = {row[0]};
+        """
 
-    Note: A paradox is a statement that contradicts itself''',
-        'True or False: All of the balls in the bowl are blue',
-        'The day before yesterday, Roy was 17. Next year, he will be 20. When is his birthday and what is today’s date?',
-        'A family consists of two mothers, two daughters, one grandmother and one granddaughter. How many people are in the family?',
-        '''Roy was watching television. Just after the midnight news here was a weather forecast: “It is raining now and will rain for the next 2 days. However, in 72 hours it will be bright and sunny.”
-    “Wrong again”, snorted Roy. He was correct but how did he know?''',
-        'A mute SOC graduate walks into a bar. They had a sign that wrote “10 pints of beer” and showed it to the bartender. Why did they stop the bartender when the 3rd pint was served?',
-        'Where can you find the finest food in UTOWN?'
-    ]
-    quizzes = [
-        'How much is this bowl of mala for 3 starving people?',
-        'I heard of this hex-traordinary camp 3530635F4630775F32303231, I wonder what it is called.',
-        'What is the store at #01-06, Stephen Riady Centre?',
-        'Which year is the earliest the NUS School of Computing can trace its roots back to?',
-        'Who is the president of NUS Computing Club?',
-        'What is the maximum number of SU credits one can bring forward to Year 2?',
-        'How many square roof panels are there in Frontier of UTown® shelter walkway?',
-        '(((((5 * 2) + 6 / 2) * (8 - 4)) - 9 / 3) - 4) / 3',
-        'How many POPStation lockers are there in Stephen Riady Centre?',
-        'How many NUS utown beneficiaries are there?',
-        'Which of the following are not focus areas of Computer Science?',
-        'What is the unmanned convenience store in SOC called?',
-        'How many floors are there in COM1?',
-        'How many zones were there in NUS before December 6, 2020?',
-        'How many food courts are there in NUS Kent Ridge Campus?'
-    ]
-    locations = [
-        'SRC Level 2 Balcony',
-        'Outside Starbucks',
-        'SRC Level 1, outside octobox',
-        'SRC Level 1, outside auditorium',
-        'SRC Level 2, outside Flavours',
-        'Benches at SRC level 1',
-        'Town Plaza',
-        'ERC, outside Mac Commons',
-        'ERC Level 1, near UTOWN benefactors',
-        'SRC Level 2, outside Auditorium 2',
-        'SRC Level 2, outside Flavours'
-    ]
-    executescript('''
-    ALTER SEQUENCE id_seq RESTART;
-    DROP TABLE IF EXISTS Question;
-    CREATE TABLE Question (
-        id INTEGER NOT NULL PRIMARY KEY UNIQUE,
-        cat_id INTEGER,
-        question_no INTEGER,
-        display TEXT,
-        points INTEGER
-    );''')
-    cat_id = 0
-    for cat in ['g', 'q', 'r', 'p']:
-        cat_id += 1
-        rng = len(points_list[cat]) + 1
-        for question_no in range(1, rng):
-            if cat != 'p':
-                display = riddles[question_no - 1] if cat == 'r' else (quizzes[question_no - 1] if cat == 'q' else locations[question_no - 1])
-                executescript(f"INSERT INTO Question (id, cat_id, question_no, display, points) VALUES (nextval('id_seq'), {cat_id}, {question_no}, '{display}', {points_list[cat][question_no - 1]})")
-            else:
-                executescript(f"INSERT INTO Question (id, cat_id, question_no, points) VALUES (nextval('id_seq'), {cat_id}, {question_no}, {points_list[cat][question_no - 1]})")
+    with open('quiz.csv', encoding = 'latin-1') as f:
+        rows = list(csv.reader(f, delimiter = ','))
+    header = rows.pop(0)
+    for row in rows:
+        row = [r.replace("'", "''") for r in row]
+        txt += f"""
+            INSERT INTO quiz ({', '.join(header)})
+            VALUES ({row[0]}, '{row[1]}', '{row[2]}', '{row[3]}', '{row[4]}', '{row[5]}', {row[6]}, '{row[7]}', '{row[8]}')
+            ON CONFLICT (id)
+                DO UPDATE SET
+                    {header[1]} = '{row[1]}',
+                    {header[2]} = '{row[2]}',
+                    {header[3]} = '{row[3]}',
+                    {header[4]} = '{row[4]}',
+                    {header[5]} = '{row[5]}',
+                    {header[6]} = {row[6]},
+                    {header[7]} = '{row[7]}',
+                    {header[8]} = '{row[8]}'
+                WHERE quiz.id = {row[0]};
+        """
 
-def executescript(script):
-    cur.execute(script)
+    with open('riddle.csv', encoding = 'latin-1') as f:
+        rows = list(csv.reader(f, delimiter = ','))
+    header = rows.pop(0)
+    for row in rows:
+        row = [r.replace("'", "''") for r in row]
+        txt += f"""
+            INSERT INTO riddle ({', '.join(header)})
+            VALUES ({row[0]}, '{row[1]}', {row[2]}, {row[3]}, '{row[4]}', '{row[5]}')
+            ON CONFLICT (id)
+                DO UPDATE SET
+                    {header[1]} = '{row[1]}',
+                    {header[2]} = {row[2]},
+                    {header[3]} = {row[3]},
+                    {header[4]} = '{row[4]}',
+                    {header[5]} = '{row[5]}'
+                WHERE riddle.id = {row[0]};
+        """
+
+    with open('point.csv', encoding = 'latin-1') as f:
+        rows = list(csv.reader(f, delimiter = ','))
+    header = rows.pop(0)
+    for row in rows:
+        row = [r.replace("'", "''") for r in row]
+        txt += f"""
+            INSERT INTO point ({', '.join(header)})
+            VALUES ({row[0]}, {row[1]})
+            ON CONFLICT (id)
+                DO UPDATE SET
+                    {header[1]} = {row[1]}
+                WHERE point.id = {row[0]};
+        """
+    cur.execute(txt)
     con.commit()
 
+def resetqr(a = None, b = None):
+    txt = ''
+    for table in ['game', 'quiz', 'riddle', 'point']:
+        txt += f"DELETE FROM {table}_og;"
+        cur.execute(f"SELECT COUNT(*) FROM {table}")
+        count = cur.fetchone()[0]
+        for house_id in range(1, 7):
+            for og_id in range(1, 7):
+                for id in range(1, count + 1):
+                    txt += f"INSERT INTO {table}_og ({table}_id, og_id, house_id) VALUES ({id}, {og_id}, {house_id});"
+    cur.execute(txt)
+    con.commit()
+
+def executescript(script, returning = False):
+    cur.execute(script)
+    con.commit()
+    if returning:
+        return cur.fetchall()
+
 def getogfromperson(chat_id):
-    cur.execute('''SELECT og_id FROM Member WHERE chat_id = {}'''.format(chat_id))
+    cur.execute(f'''SELECT og_id, og.house_id, house.name, og.name FROM member JOIN og ON (og_id = og.id AND member.house_id = og.house_id) JOIN house ON (house.id = og.house_id) WHERE member.chat_id = {chat_id}''')
     res = cur.fetchone()
-    return res[0] if res else res
+    return res
 
 def getogfromgroup(chat_id):
-    cur.execute('''SELECT id FROM OG WHERE chat_id = {}'''.format(chat_id))
+    cur.execute(f'''SELECT og.id, house_id, house.name, og.name FROM og JOIN house ON (house.id = house_id) WHERE chat_id = {chat_id}''')
     res = cur.fetchone()
-    return res[0] if res else res
+    return res
 
-def getpoints(og_id):
-    cur.execute('''SELECT points FROM OG WHERE id = {}'''.format(og_id))
-    res = cur.fetchone()
-    return res[0]
-
-def checkqr(og_id, qr):
-    cur.execute('SELECT {} FROM OG WHERE id = {}'.format(qr, og_id))
+def getpoints(og_id:int, house_id:int):
+    cur.execute(f'''SELECT points FROM og WHERE id = {og_id} AND house_id = {house_id}''')
     res = cur.fetchone()
     return res[0]
 
 def userexists(chat_id):
-    cur.execute('''SELECT chat_id from Member WHERE chat_id = {}'''.format(chat_id))
+    cur.execute(f'''SELECT chat_id from member WHERE chat_id = {chat_id}''')
     res = cur.fetchall()
     return res
 
 def groupregistered(chat_id):
-    cur.execute('''SELECT chat_id from OG WHERE chat_id = {}'''.format(chat_id))
+    cur.execute('''SELECT chat_id from og WHERE chat_id = {}'''.format(chat_id))
     res = cur.fetchall()
     return res
 
-def getogchatid(og_id):
-    cur.execute(f'SELECT chat_id FROM OG WHERE id = {og_id}')
+def getogchatid(og_id, house_id):
+    cur.execute(f'SELECT chat_id FROM og WHERE id = {og_id} AND house_id = {house_id}')
     res = cur.fetchone()
     return res[0] if res else res
 
 def getsmchatid(game_id):
-    cur.execute(f'SELECT chat_id FROM Member WHERE og_id = {game_id} AND perms = 2')
+    cur.execute(f'SELECT chat_id FROM member WHERE game_id = {game_id} AND perms = 2')
     res = cur.fetchone()
     return res[0]
 
 def haveperms(chat_id, level):
-    cur.execute('''SELECT perms from Member WHERE chat_id = {}'''.format(chat_id))
+    cur.execute(f'''SELECT perms from member WHERE chat_id = {chat_id}''')
     res = cur.fetchone()
     return (res[0] >= level if res else False)
 
-def getquestion(catandid):
-    cat = catandid[0]
-    id = int(catandid[1:])
-    cat_id = ['g', 'q', 'r', 'p'].index(cat) + 1
-    cur.execute(f'''SELECT display from Question WHERE cat_id = {cat_id} AND question_no = {id}''')
+def getquiz(id):
+    cur.execute(f'SELECT * from quiz WHERE id = {id}')
     res = cur.fetchone()
-    return res[0]
+    return res[1:]
 
-def getrewards(catandid):
-    cat = catandid[0]
-    id = int(catandid[1:])
-    cat_id = ['g', 'q', 'r', 'p'].index(cat) + 1
-    cur.execute(f'''SELECT points from Question WHERE cat_id = {cat_id} AND question_no = {id}''')
+def getriddle(id):
+    cur.execute(f'SELECT * from riddle WHERE id = {id}')
     res = cur.fetchone()
-    return res[0]
+    return res[1:]
+
+def getgame(id):
+    cur.execute(f'SELECT * from game WHERE id = {id}')
+    res = cur.fetchone()
+    return res[1:]
+
+def getpoint(id):
+    cur.execute(f'SELECT * from point WHERE id = {id}')
+    res = cur.fetchone()
+    return res[1:]
 
 def getqueueforgame(game_id): # gets the queue of a specific station game
     cur.execute(f'''SELECT
-        og_id, queue
-    FROM Queue
+        og_id, house_id, queue
+    FROM queue
     WHERE
         game_id = {game_id} AND (queue = 1 OR queue = 0)
     ORDER BY
@@ -273,15 +343,59 @@ def getqueueforgame(game_id): # gets the queue of a specific station game
     res = cur.fetchall()
     return res
 
-def getqueueforog(og_id): # gets the stations queued by an OG
-    cur.execute(f'SELECT game_id, queue from Queue WHERE og_id = {og_id} ORDER BY queue ASC, time ASC')
-    res = cur.fetchall()
-    return res
+def getqueueforog(og_id, house_id): # gets the stations queued by an og
+    cur.execute(f'SELECT game_id, queue from queue WHERE og_id = {og_id} AND house_id = {house_id} ORDER BY queue ASC, time ASC')
+    return cur.fetchall()
 
 def getchatids():
-    cur.execute(f'SELECT chat_id from Member')
+    cur.execute(f'SELECT chat_id from member')
     res = cur.fetchall()
     return [i[0] for i in res]
 
-def og_ab(og_id): # in case we wanna format og names e.g. instead of og 7 maybe we have og B1
-    return og_id
+def shorten(og_id:int, house_name:str):
+    return f'{house_name[0]}{og_id}'
+
+def gethouses():
+    cur.execute('SELECT og.id, house_id, house.name FROM og, house WHERE house_id = house.id ORDER BY house_id, og.id')
+    return cur.fetchall()
+
+def getgames():
+    cur.execute('SELECT id, title FROM game')
+    return cur.fetchall()
+
+def gethousename(house_id:int):
+    cur.execute(f'SELECT name FROM house WHERE id = {house_id}')
+    return cur.fetchone()[0]
+
+def getgametitle(game_id:int):
+    cur.execute(f'SELECT title FROM game WHERE id = {game_id}')
+    return cur.fetchone()[0]
+
+def getuser(user_id:int):
+    cur.execute(f'''
+        SELECT
+            m.og_id, m.house_id, h.name, m.game_id, g.title, o.name
+        FROM
+            member m
+        LEFT JOIN house h
+            ON h.id = m.house_id
+        LEFT JOIN game g
+            ON g.id = m.game_id
+        LEFT JOIN og o
+            ON o.id = m.og_id AND o.house_id = m.house_id
+        WHERE
+            chat_id = {user_id}
+    ''')
+    res = cur.fetchone()
+    return res if res else res
+
+def getogqr(og_id, house_id, cat, id = None):
+    table = 'quiz' if cat == 'q' else ('riddle' if cat == 'r' else ('game' if cat == 'g' else 'point'))
+    cur.execute(f'SELECT * FROM {table}_og WHERE og_id = {og_id} AND house_id = {house_id}{f" AND {table}_id = {id}" if id else ""} ORDER BY {table}_id')
+    res = cur.fetchone() if id else cur.fetchall()
+    return res[3:] if id else [r[3:] for r in res]
+
+def getogname(og_id, house_id):
+    cur.execute(f"""SELECT house.name, og.name FROM og JOIN house ON (house.id = og.house_id) WHERE og.id = {og_id} AND house_id = {house_id}""")
+    house_name, og_name = cur.fetchone()
+    return og_name or f'{house_name} {og_id}'
