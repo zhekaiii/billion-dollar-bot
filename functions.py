@@ -69,7 +69,7 @@ def start(update, context):
             text = 'If you\'re looking for the help text, it\'s /help.'
     elif type == 'group':
         if haveperms(user_id, 1) and (not haveperms(user_id, 2)):
-            og_id, house_id, house_name = getogfromperson(user_id)
+            og_id, house_id, house_name, _ = getogfromperson(user_id)
             # if your og hasn't had a chatid or if your og chat id is another group
             if getogchatid(og_id, house_id) == None or getogchatid(og_id, house_id) != chat_id:
                 # if your og chat id is another group
@@ -132,9 +132,6 @@ def mainmenu(update, context, message_id=None):  # Done?
     user_id = update.effective_user.id
     keyboard = None
     if update.effective_chat.type == 'group':
-        og_id, _, house_name, og_name = getogfromgroup(chat_id)
-        if not og_name:
-            og_name = f'{house_name} {og_id}'
         if not haveperms(user_id, 2):  # Unregistered user or head or OGL
             if not groupregistered(chat_id):
                 if haveperms(user_id, 1):
@@ -144,6 +141,9 @@ def mainmenu(update, context, message_id=None):  # Done?
                 else:
                     text = 'OGL, please type /start!'
             else:
+                og_id, _, house_name, og_name = getogfromgroup(chat_id)
+                if not og_name:
+                    og_name = f'{house_name} {og_id}'
                 keyboard = InlineKeyboardMarkup(
                     [
                         [InlineKeyboardButton(
