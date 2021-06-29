@@ -631,7 +631,7 @@ def button(update, context):
         queue = getqueueforgame(station_id)
         text = '<b><u>Queue:</u></b> (Doesn\'t update automatically)\n\n'
         for og, house_id, priority in queue:
-            text += f'{gethousename(house_id)} {og_id}'
+            text += f'{gethousename(house_id)} {og}'
             if priority == 0:
                 text += ' (Currently playing)'
             text += '\n'
@@ -646,11 +646,11 @@ def button(update, context):
         if queue:
             playing_og, playing_house, priority = queue[0]
             if priority == 1:
-                text = f'{gethousename(house_id)} {og_id} is now playing your station.'
+                text = f'{gethousename(playing_house)} {playing_og} is now playing your station.'
                 executescript(
                     f'UPDATE Queue SET queue = 0, time = DEFAULT WHERE og_id = {playing_og} AND house_id = {playing_house} AND game_id = {station_id}')
             elif priority == 0:
-                text = f'{gethousename(house_id)} {og_id} is already playing your station!'
+                text = f'{gethousename(playing_house)} {playing_og} is already playing your station!'
         else:
             text = 'There are no OGs queuing for your station!'
         context.bot.edit_message_text(
@@ -661,7 +661,7 @@ def button(update, context):
         if queue:
             og, house, priority = queue[0]
             if priority == 0:
-                text = f'Finish OG {gethousename(house_id)} {og_id}\'s session at your station?'
+                text = f'Finish {gethousename(house)} {og}\'s session at your station?'
                 markup.append([InlineKeyboardButton(
                     'Pass', callback_data='pass'), InlineKeyboardButton('Fail', callback_data='fail')])
             elif priority != 0:
@@ -684,7 +684,7 @@ def button(update, context):
         context.bot.sendMessage(
             og_chat, f'You completed {station_title} and got {reward} Favour Points! You now have {points} points!')
         context.bot.edit_message_text(
-            f'{house_name} {og_id} passed!', chat_id, message_id, reply_markup=keyboard)
+            f'{house} {og} passed!', chat_id, message_id, reply_markup=keyboard)
     elif callback_data == 'fail':
         keyboard = InlineKeyboardMarkup(
             [[InlineKeyboardButton('Back', callback_data='mainmenu')]])
@@ -692,13 +692,13 @@ def button(update, context):
         og, house, priority = queue[0]
         [og_chat, house_name] = executescript(f'''
             UPDATE game_og SET first = FALSE WHERE og_id = {og} AND house_id = {house};
-            SELECT chat_id, house_name FROM og WHERE id = {og} AND house_id = {house};
-        ''', True)
+            SELECT chat_id, house.name FROM og JOIN house ON (og.house_id = house.id) WHERE og.id = {og} AND house_id = {house};
+        ''', True)[0]
         clearqueue(og, house, station_id, context)
         context.bot.sendMessage(
             og_chat, f'You failed to complete {station_title}... You can try again later by re-queuing for that station!')
         context.bot.edit_message_text(
-            f'{house_name} {og_id} failed!', chat_id, message_id, reply_markup=keyboard)
+            f'{house} {og} failed!', chat_id, message_id, reply_markup=keyboard)
     elif callback_data == 'game':  # games menu
         markup = [[InlineKeyboardButton('Back', callback_data='mainmenu')]]
         queue = getqueueforog(og_id, house_id)
@@ -713,7 +713,7 @@ def button(update, context):
             buttontext = title + ' ' + ('🔒' if not unlocked else (
                 '✅' if completed else ('‼️' if queue and queue[0][0] == i + 1 else '')))
             temp.append(InlineKeyboardButton(
-                buttontext, callback_data='nothing' if completed or not unlocked else f'g{id + 1}'))
+                buttontext, callback_data='nothing' if completed or not unlocked else f'g{i + 1}'))
             if i % 2:
                 markup.append(temp)
                 temp = []
@@ -728,12 +728,12 @@ def button(update, context):
         context.bot.edit_message_text('Loading...', chat_id, message_id)
         id = int(callback_data[1:])
         markup = [[InlineKeyboardButton(
-            'Station Games', callback_data='game'), InlineKeyboardButton('Main Menu', 'mainmenu')]]
+            'Station Games', callback_data='game'), InlineKeyboardButton('Main Menu', callback_data='mainmenu')]]
         [unlocked, completed, first, title, rewards] = executescript(f'''
-            SELECT unlocked, completed, once, title, points FROM game_og
+            SELECT unlocked, completed, first, title, points FROM game_og
             JOIN game ON game_id = id
             WHERE og_id = {og_id} AND house_id = {house_id} AND id = {id}
-        ''', True)
+        ''', True)[0]
         if not unlocked:
             context.bot.edit_message_text('You have not scanned the right QR code for that quiz.',
                                           chat_id, message_id, reply_markup=InlineKeyboardMarkup(markup))
@@ -756,7 +756,8 @@ def button(update, context):
             text = 'The queue is empty!'
         if own_queue:  # if your queue has something
             if own_queue[0][0] == id:  # you are queued for that station
-                if not first == 2:
+                # if priority != 0 means you're queuing for it but not playing it
+                if own_queue[0][1] != 0:
                     markup[1].append(InlineKeyboardButton(
                         'Unqueue', callback_data='unqueue'))
         else:  # if your queue has nothing so if it's unlocked you failed it before
@@ -771,10 +772,11 @@ def button(update, context):
         context.bot.edit_message_text(f'Unqueued from {getgametitle(game_id)}!', chat_id, message_id, reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton('Main Menu', callback_data='mainmenu')]]))
     elif callback_data.startswith('queue'):
+        markup = [[InlineKeyboardButton('Back', callback_data='mainmenu')]]
         game_id = int(callback_data.split('.')[1])
-        queue_game(og_id, house_id, game_id, context)
+        queue_game(og_id, house_id, game_id, None, chat_id, context.bot)
         context.bot.edit_message_text(
-            f'Queued for {getgametitle(game_id)}!', reply_markup=InlineKeyboardMarkup(markup))
+            f'Queued for {getgametitle(game_id)}!', chat_id, message_id, reply_markup=InlineKeyboardMarkup(markup))
 
 
 def decode_qr(update, context):
@@ -855,6 +857,7 @@ def decode_qr(update, context):
         ]
         msg.edit_text(
             f'Unable to detect valid QR code. {choice(fun_text)} Please try again.')
+    msg.delete()
 
 
 def addpts(og_id, house_id, amt):  # done
@@ -930,12 +933,14 @@ def unlockgame(game_id, og_id, house_id, user, bot):  # done
 
 def queue_game(og_id, house_id, game_id, game, og_chat, bot):  # done
     own_queue = getqueueforog(og_id, house_id)
-    if game_id == None or game == None:
+    if game_id == None and game == None:
         if not own_queue:
             return
         game_id = own_queue[0]
+    if game == None:
         game = getgame(game_id)
     location, game_name, _ = game
+    print(game)
     q = 2 if own_queue else 1  # if you are already queued for something q = 2 else q = 1
     if q == 1:
         bot.sendMessage(og_chat, f'You have been queued for {game_name}!')
