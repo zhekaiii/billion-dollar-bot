@@ -2,6 +2,7 @@ import psycopg2 as psql
 import csv
 from pybot import ic1_id, ic2_id, ic3_id, ic4_id, cur, con, logger
 
+
 def dropdb():
     cur.execute('''
     DROP TABLE IF EXISTS house CASCADE;
@@ -137,6 +138,7 @@ def dropdb():
         FOREIGN KEY (point_id) REFERENCES point(id)
     )''')
 
+
 def cleardb():
     cur.execute('''
     DELETE FROM house;
@@ -153,19 +155,20 @@ def cleardb():
     DELETE FROM point_og;''')
     con.commit()
 
-def resetdb(update = None, context = None):
+
+def resetdb(update=None, context=None):
     msg = context.bot.sendMessage(update.effective_chat.id, "Hold on...")
     cleardb()
 
-    with open('house.csv', encoding = 'latin-1') as f:
-        rows = list(csv.reader(f, delimiter = ','))
+    with open('house.csv', encoding='latin-1') as f:
+        rows = list(csv.reader(f, delimiter=','))
     header = rows.pop(0)
     for row in rows:
         cur.execute(f"""
             INSERT INTO house ({', '.join(header)})
             VALUES ({row[0]}, '{row[1]}')
         """)
-        
+
     txt = ''
     for house_id in range(1, 7):
         for og in range(1, 7):
@@ -179,9 +182,10 @@ def resetdb(update = None, context = None):
 
     msg.edit_text("Reset Successful!")
 
+
 def resetqns():
-    with open('game.csv', encoding = 'latin-1') as f:
-        rows = list(csv.reader(f, delimiter = ','))
+    with open('game.csv', encoding='latin-1') as f:
+        rows = list(csv.reader(f, delimiter=','))
     header = rows.pop(0)
     txt = ''
     for row in rows:
@@ -197,8 +201,8 @@ def resetqns():
                 WHERE game.id = {row[0]};
         """
 
-    with open('quiz.csv', encoding = 'latin-1') as f:
-        rows = list(csv.reader(f, delimiter = ','))
+    with open('quiz.csv', encoding='latin-1') as f:
+        rows = list(csv.reader(f, delimiter=','))
     header = rows.pop(0)
     for row in rows:
         row = [r.replace("'", "''") for r in row]
@@ -218,8 +222,8 @@ def resetqns():
                 WHERE quiz.id = {row[0]};
         """
 
-    with open('riddle.csv', encoding = 'latin-1') as f:
-        rows = list(csv.reader(f, delimiter = ','))
+    with open('riddle.csv', encoding='latin-1') as f:
+        rows = list(csv.reader(f, delimiter=','))
     header = rows.pop(0)
     for row in rows:
         row = [r.replace("'", "''") for r in row]
@@ -236,8 +240,8 @@ def resetqns():
                 WHERE riddle.id = {row[0]};
         """
 
-    with open('point.csv', encoding = 'latin-1') as f:
-        rows = list(csv.reader(f, delimiter = ','))
+    with open('point.csv', encoding='latin-1') as f:
+        rows = list(csv.reader(f, delimiter=','))
     header = rows.pop(0)
     for row in rows:
         row = [r.replace("'", "''") for r in row]
@@ -252,7 +256,8 @@ def resetqns():
     cur.execute(txt)
     con.commit()
 
-def resetqr(a = None, b = None):
+
+def resetqr(a=None, b=None):
     txt = ''
     for table in ['game', 'quiz', 'riddle', 'point']:
         txt += f"DELETE FROM {table}_og;"
@@ -265,73 +270,92 @@ def resetqr(a = None, b = None):
     cur.execute(txt)
     con.commit()
 
-def executescript(script, returning = False):
+
+def executescript(script, returning=False):
     cur.execute(script)
     con.commit()
     if returning:
         return cur.fetchall()
 
+
 def getogfromperson(chat_id):
-    cur.execute(f'''SELECT og_id, og.house_id, house.name, og.name FROM member JOIN og ON (og_id = og.id AND member.house_id = og.house_id) JOIN house ON (house.id = og.house_id) WHERE member.chat_id = {chat_id}''')
+    cur.execute(
+        f'''SELECT og_id, og.house_id, house.name, og.name FROM member JOIN og ON (og_id = og.id AND member.house_id = og.house_id) JOIN house ON (house.id = og.house_id) WHERE member.chat_id = {chat_id}''')
     res = cur.fetchone()
     return res
+
 
 def getogfromgroup(chat_id):
-    cur.execute(f'''SELECT og.id, house_id, house.name, og.name FROM og JOIN house ON (house.id = house_id) WHERE chat_id = {chat_id}''')
+    cur.execute(
+        f'''SELECT og.id, house_id, house.name, og.name FROM og JOIN house ON (house.id = house_id) WHERE chat_id = {chat_id}''')
     res = cur.fetchone()
     return res
 
-def getpoints(og_id:int, house_id:int):
-    cur.execute(f'''SELECT points FROM og WHERE id = {og_id} AND house_id = {house_id}''')
+
+def getpoints(og_id: int, house_id: int):
+    cur.execute(
+        f'''SELECT points FROM og WHERE id = {og_id} AND house_id = {house_id}''')
     res = cur.fetchone()
     return res[0]
+
 
 def userexists(chat_id):
     cur.execute(f'''SELECT chat_id from member WHERE chat_id = {chat_id}''')
     res = cur.fetchall()
     return res
 
+
 def groupregistered(chat_id):
     cur.execute('''SELECT chat_id from og WHERE chat_id = {}'''.format(chat_id))
     res = cur.fetchall()
     return res
 
+
 def getogchatid(og_id, house_id):
-    cur.execute(f'SELECT chat_id FROM og WHERE id = {og_id} AND house_id = {house_id}')
+    cur.execute(
+        f'SELECT chat_id FROM og WHERE id = {og_id} AND house_id = {house_id}')
     res = cur.fetchone()
     return res[0] if res else res
 
+
 def getsmchatid(game_id):
-    cur.execute(f'SELECT chat_id FROM member WHERE game_id = {game_id} AND perms = 2')
+    cur.execute(
+        f'SELECT chat_id FROM member WHERE game_id = {game_id} AND perms = 2')
     res = cur.fetchone()
     return res[0]
+
 
 def haveperms(chat_id, level):
     cur.execute(f'''SELECT perms from member WHERE chat_id = {chat_id}''')
     res = cur.fetchone()
     return (res[0] >= level if res else False)
 
+
 def getquiz(id):
     cur.execute(f'SELECT * from quiz WHERE id = {id}')
     res = cur.fetchone()
     return res[1:]
+
 
 def getriddle(id):
     cur.execute(f'SELECT * from riddle WHERE id = {id}')
     res = cur.fetchone()
     return res[1:]
 
+
 def getgame(id):
     cur.execute(f'SELECT * from game WHERE id = {id}')
     res = cur.fetchone()
     return res[1:]
+
 
 def getpoint(id):
     cur.execute(f'SELECT * from point WHERE id = {id}')
     res = cur.fetchone()
     return res[1:]
 
-def getqueueforgame(game_id): # gets the queue of a specific station game
+
+def getqueueforgame(game_id):  # gets the queue of a specific station game
     cur.execute(f'''SELECT
         og_id, house_id, queue
     FROM queue
@@ -343,35 +367,45 @@ def getqueueforgame(game_id): # gets the queue of a specific station game
     res = cur.fetchall()
     return res
 
-def getqueueforog(og_id, house_id): # gets the stations queued by an og
-    cur.execute(f'SELECT game_id, queue from queue WHERE og_id = {og_id} AND house_id = {house_id} ORDER BY queue ASC, time ASC')
+
+def getqueueforog(og_id, house_id):  # gets the stations queued by an og
+    cur.execute(
+        f'SELECT game_id, queue from queue WHERE og_id = {og_id} AND house_id = {house_id} ORDER BY queue ASC, time ASC')
     return cur.fetchall()
+
 
 def getchatids():
     cur.execute(f'SELECT chat_id from member')
     res = cur.fetchall()
     return [i[0] for i in res]
 
-def shorten(og_id:int, house_name:str):
+
+def shorten(og_id: int, house_name: str):
     return f'{house_name[0]}{og_id}'
 
+
 def gethouses():
-    cur.execute('SELECT og.id, house_id, house.name FROM og, house WHERE house_id = house.id ORDER BY house_id, og.id')
+    cur.execute(
+        'SELECT og.id, house_id, house.name FROM og, house WHERE house_id = house.id ORDER BY house_id, og.id')
     return cur.fetchall()
+
 
 def getgames():
     cur.execute('SELECT id, title FROM game')
     return cur.fetchall()
 
-def gethousename(house_id:int):
+
+def gethousename(house_id: int):
     cur.execute(f'SELECT name FROM house WHERE id = {house_id}')
     return cur.fetchone()[0]
 
-def getgametitle(game_id:int):
+
+def getgametitle(game_id: int):
     cur.execute(f'SELECT title FROM game WHERE id = {game_id}')
     return cur.fetchone()[0]
 
-def getuser(user_id:int):
+
+def getuser(user_id: int):
     cur.execute(f'''
         SELECT
             m.og_id, m.house_id, h.name, m.game_id, g.title, o.name
@@ -384,18 +418,23 @@ def getuser(user_id:int):
         LEFT JOIN og o
             ON o.id = m.og_id AND o.house_id = m.house_id
         WHERE
-            chat_id = {user_id}
+            m.chat_id = {user_id}
     ''')
     res = cur.fetchone()
     return res if res else res
 
-def getogqr(og_id, house_id, cat, id = None):
-    table = 'quiz' if cat == 'q' else ('riddle' if cat == 'r' else ('game' if cat == 'g' else 'point'))
-    cur.execute(f'SELECT * FROM {table}_og WHERE og_id = {og_id} AND house_id = {house_id}{f" AND {table}_id = {id}" if id else ""} ORDER BY {table}_id')
+
+def getogqr(og_id, house_id, cat, id=None):
+    table = 'quiz' if cat == 'q' else (
+        'riddle' if cat == 'r' else ('game' if cat == 'g' else 'point'))
+    cur.execute(
+        f'SELECT * FROM {table}_og WHERE og_id = {og_id} AND house_id = {house_id}{f" AND {table}_id = {id}" if id else ""} ORDER BY {table}_id')
     res = cur.fetchone() if id else cur.fetchall()
     return res[3:] if id else [r[3:] for r in res]
 
+
 def getogname(og_id, house_id):
-    cur.execute(f"""SELECT house.name, og.name FROM og JOIN house ON (house.id = og.house_id) WHERE og.id = {og_id} AND house_id = {house_id}""")
+    cur.execute(
+        f"""SELECT house.name, og.name FROM og JOIN house ON (house.id = og.house_id) WHERE og.id = {og_id} AND house_id = {house_id}""")
     house_name, og_name = cur.fetchone()
     return og_name or f'{house_name} {og_id}'
