@@ -964,7 +964,7 @@ def queue_game(og_id, house_id, game_id, game, og_chat, bot):  # done
 def clearqueue(og_id, house_id, game_id, context):  # Done
     executescript(
         f'DELETE FROM Queue WHERE og_id = {og_id} AND house_id = {house_id} AND game_id = {game_id}')
-    location, game_name = getgame(game_id)
+    location, game_name, _ = getgame(game_id)
     queue_game(og_id, house_id, None, None,
                getogchatid(og_id, house_id), context.bot)
     queue = getqueueforgame(game_id)
