@@ -220,6 +220,7 @@ def button(update, context):
         if perms == 1:
             og_id = int(callback_data.split('.')[1])
             house_id = int(callback_data.split('.')[2])
+
             executescript(f'''INSERT INTO Member (chat_id, og_id, house_id, perms) VALUES ({user.id}, {og_id}, {house_id}, {perms})
             ON CONFLICT (chat_id) DO UPDATE
             SET
@@ -228,7 +229,7 @@ def button(update, context):
                 game_id = NULL,
                 perms = 1
             ''')
-            text = f'the OGL of {og_name}!'
+            text = f'the OGL of {getogname(og_id, house_id)}!'
         elif perms == 2:
             game_id = int(callback_data.split('.')[1])
             executescript(f'''INSERT INTO Member (chat_id, game_id, perms) VALUES ({user.id}, {game_id}, {perms})

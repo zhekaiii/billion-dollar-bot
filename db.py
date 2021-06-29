@@ -289,6 +289,7 @@ def getogfromgroup(chat_id):
     cur.execute(
         f'''SELECT og.id, house_id, house.name, og.name FROM og JOIN house ON (house.id = house_id) WHERE chat_id = {chat_id}''')
     res = cur.fetchone()
+    print(res)
     return res
 
 
