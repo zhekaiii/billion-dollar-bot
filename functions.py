@@ -935,7 +935,8 @@ def queue_game(og_id, house_id, game_id, game, og_chat, bot):  # done
             return
         game_id = own_queue[0]
         game = getgame(game_id)
-    location, game_name = game
+    print(game)
+    location, game_name, _ = game
     q = 2 if own_queue else 1  # if you are already queued for something q = 2 else q = 1
     if q == 1:
         bot.sendMessage(og_chat, f'You have been queued for {game_name}!')
