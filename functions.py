@@ -530,11 +530,11 @@ def button(update, context):
         ans = callback_data.split('.')[2]
         [[points]] = executescript(f'''
             UPDATE {table[cat]}_og SET completed = TRUE
-            WHERE og_id = {og_id} AND house_id = {house_id} AND {table[cat]}_id = {id}
-            RETURNING points;
+            WHERE og_id = {og_id} AND house_id = {house_id} AND {table[cat]}_id = {id};
             UPDATE og SET points = points + (
                 SELECT points FROM {table[cat]} WHERE id = {id}
             ) WHERE id = {og_id} AND house_id = {house_id}
+            RETURNING points;
         ''', True)
         context.bot.edit_message_text(
             f'{ans} is correct! ✅\nYou now have {points} points!', chat_id, message_id, reply_markup=markup)
