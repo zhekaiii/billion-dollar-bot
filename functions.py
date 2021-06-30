@@ -609,7 +609,7 @@ def button(update, context):
         answering_house_id = int(callback_data.split('.')[3])
         og_chat = getogchatid(answering_og_id, answering_house_id)
         [points, amt] = executescript(f'''
-            UPDATE riddle_og SET completed = TRUE WHERE riddle_id = {id} AND og_id = {answering_og_id} AND {answering_house_id};
+            UPDATE riddle_og SET completed = TRUE WHERE riddle_id = {id} AND og_id = {answering_og_id} AND house_id = {answering_house_id};
             UPDATE og o SET points = o.points + r.points FROM riddle r WHERE r.id = {id}
             AND o.id = {answering_og_id} AND o.house_id = {answering_house_id} RETURNING o.points, r.points;
         ''', True)
