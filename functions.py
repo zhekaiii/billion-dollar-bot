@@ -527,7 +527,7 @@ def button(update, context):
         if not unlocked or attempts == 0:
             context.bot.edit_message_text(
                 text, chat_id, message_id, reply_markup=markup)
-        ans = callback_data.split('.')[2]
+        ans = '.'.join(callback_data.split('.')[2:])
         [[points]] = executescript(f'''
             UPDATE {table[cat]}_og SET completed = TRUE
             WHERE og_id = {og_id} AND house_id = {house_id} AND {table[cat]}_id = {id};
@@ -559,7 +559,7 @@ def button(update, context):
         executescript(f'''
             UPDATE {table[cat]}_og SET attempts = attempts - 1 WHERE {table[cat]}_id = {id} AND og_id = {og_id} AND house_id = {house_id}
         ''')
-        ans = callback_data.split('.')[2]
+        ans = '.'.join(callback_data.split('.')[2:])
         context.bot.edit_message_text(f'{ans} is wrong! 🙅🏻' + (
             ' You have run out of attempts!' if attempts == 1 else ''), chat_id, message_id, reply_markup=markup)
     elif callback_data.startswith('sendans'):
