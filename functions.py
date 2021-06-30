@@ -564,8 +564,8 @@ def button(update, context):
         context.bot.edit_message_text(f'{ans} is wrong! 🙅🏻' + (
             ' You have run out of attempts!' if attempts == 1 else ''), chat_id, message_id, reply_markup=markup)
     elif callback_data.startswith('sendans'):
-        og_markup = [[InlineKeyboardButton(
-            'Riddles', 'riddle'), InlineKeyboardButton('Main Menu', 'mainmenu')]]
+        og_markup = InlineKeyboardMarkup([[InlineKeyboardButton(
+            'Riddles', callback_data='riddle'), InlineKeyboardButton('Main Menu', callback_data='mainmenu')]])
         id = int(callback_data.split('.')[1])
         answer = '.'.join(callback_data.split('.')[1:-2])
         unlocked, completed, attempts = getogqr(og_id, house_id, 'r', id)
@@ -574,11 +574,11 @@ def button(update, context):
                 'Sorry, you ran out of attempts!', chat_id, message_id, reply_markup=og_markup)
             return
         [qn, image_url] = executescript(f'''
-            UPDATE og o SET attempts = attempts - 1
+            UPDATE riddle_og SET attempts = riddle_og.attempts - 1
             FROM riddle r
-            WHERE r.id = {id} AND o.id = {og_id} AND o.house_id = {house_id}
+            WHERE riddle_id = {id} AND r.id = {id} AND og_id = {og_id} AND house_id = {house_id}
             RETURNING r.text, r.image_url
-        ''', True)
+        ''', True)[0]
         ans = f'<u>Riddle {id}</u>\n'
         ans += qn
         ans += ('\n' + image_url) if image_url else ''
@@ -595,9 +595,11 @@ def button(update, context):
                 ic1_id, ans, reply_markup=keyboard, parse_mode=ParseMode.HTML)
             #context.bot.sendMessage(ic2_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML)
         else:
-            # context.bot.sendMessage(ic1_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML) # for testing purposes
+            # for testing purposes
             context.bot.sendMessage(
-                ic3_id, ans, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+                ic1_id, ans, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+            # context.bot.sendMessage(
+            #     ic3_id, ans, reply_markup=keyboard, parse_mode=ParseMode.HTML)
             #context.bot.sendMessage(ic4_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML)
         context.bot.edit_message_text(
             'Answer sent! Please wait for the response.', chat_id, message_id, reply_markup=og_markup)
@@ -675,12 +677,12 @@ def button(update, context):
             [[InlineKeyboardButton('Back', callback_data='mainmenu')]])
         queue = getqueueforgame(station_id)
         og, house, priority = queue[0]
-        clearqueue(og, house, station_id, context)  # TODO: FIX THIS
+        clearqueue(og, house, station_id, context)
         [points, reward, og_chat, house_name] = executescript(f'''
             UPDATE game_og SET completed = TRUE, first = FALSE WHERE game_id = {station_id} AND og_id = {og} AND house_id = {house};
             UPDATE og o SET points = o.points + g.points FROM game g, house h WHERE g.id = {station_id} AND o.id = {og} AND o.house_id = {house} AND h.id = {house}
             RETURNING o.points, g.points, o.chat_id, h.name
-        ''', True)
+        ''', True)[0]
         context.bot.sendMessage(
             og_chat, f'You completed {station_title} and got {reward} Favour Points! You now have {points} points!')
         context.bot.edit_message_text(
