@@ -470,7 +470,7 @@ def button(update, context):
             buttontext = '🔒' if not unlocked else (
                 '✅' if completed else ('❌' if attempts == 0 else quiznum))
             temp.append(InlineKeyboardButton(
-                buttontext, callback_data='nothing' if not unlocked else 'r{}'.format(quiznum)))
+                buttontext, callback_data='nothing' if not unlocked else 'q{}'.format(quiznum)))
             if quiznum % 5 == 0:
                 markup.append(temp)
                 temp = []
@@ -827,6 +827,7 @@ def decode_qr(update, context):
         f.close()
         if update.message.caption == '/test':
             msg.edit_text(decoded)
+            return
         elif decoded.startswith('RIDDLE'):
             unlockriddle(int(decoded[7:]), og_id, house_id,
                          update.effective_user, context.bot)
@@ -859,6 +860,7 @@ def decode_qr(update, context):
         ]
         msg.edit_text(
             f'Unable to detect valid QR code. {choice(fun_text)} Please try again.')
+        return
     msg.delete()
 
 
