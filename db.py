@@ -164,7 +164,6 @@ def seeddb():
 def resetdb(update=None, context=None):
     msg = context.bot.sendMessage(update.effective_chat.id, "Hold on...")
     cur.execute(f'''
-    DELETE FROM house;
     UPDATE og SET chat_id = NULL, points = 0;
     DELETE FROM member;
     DELETE FROM queue;
