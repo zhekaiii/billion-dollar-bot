@@ -870,7 +870,6 @@ def addpts(og_id, house_id, amt):  # done
 
 
 def unlockriddle(riddle_id, og_id, house_id, user, bot):  # done
-    print('riddle')
     og_chat = getogchatid(og_id, house_id)
     unlocked, *_ = getogqr(og_id, house_id, 'r', riddle_id)
     if unlocked:
@@ -890,7 +889,6 @@ def unlockriddle(riddle_id, og_id, house_id, user, bot):  # done
 
 
 def unlockquiz(quiz_id, og_id, house_id, user, bot):  # done
-    print('quiz')
     og_chat = getogchatid(og_id, house_id)
     unlocked, *_ = getogqr(og_id, house_id, 'q', quiz_id)
     if unlocked:
@@ -903,7 +901,6 @@ def unlockquiz(quiz_id, og_id, house_id, user, bot):  # done
 
 
 def unlockpts(point_id, og_id, house_id, user, bot):  # done
-    print('points')
     og_chat = getogchatid(og_id, house_id)
     [unlocked] = getogqr(og_id, house_id, 'p', point_id)
     if unlocked:
@@ -920,7 +917,6 @@ def unlockpts(point_id, og_id, house_id, user, bot):  # done
 
 
 def unlockgame(game_id, og_id, house_id, user, bot):  # done
-    print('game')
     og_chat = getogchatid(og_id, house_id)
     unlocked, *_ = getogqr(og_id, house_id, 'g', game_id)
     if unlocked:
@@ -943,7 +939,6 @@ def queue_game(og_id, house_id, game_id, game, og_chat, bot):  # done
     if game == None:
         game = getgame(game_id)
     location, game_name, _ = game
-    print(game)
     q = 2 if own_queue else 1  # if you are already queued for something q = 2 else q = 1
     if q == 1:
         bot.sendMessage(og_chat, f'You have been queued for {game_name}!')

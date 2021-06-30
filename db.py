@@ -139,27 +139,7 @@ def dropdb():
     )''')
 
 
-def cleardb():
-    cur.execute('''
-    DELETE FROM house;
-    DELETE FROM og;
-    DELETE FROM member;
-    DELETE FROM queue;
-    DELETE FROM quiz;
-    DELETE FROM riddle;
-    DELETE FROM game;
-    DELETE FROM point;
-    DELETE FROM quiz_og;
-    DELETE FROM riddle_og;
-    DELETE FROM game_og;
-    DELETE FROM point_og;''')
-    con.commit()
-
-
-def resetdb(update=None, context=None):
-    msg = context.bot.sendMessage(update.effective_chat.id, "Hold on...")
-    cleardb()
-
+def seeddb():
     with open('house.csv', encoding='latin-1') as f:
         rows = list(csv.reader(f, delimiter=','))
     header = rows.pop(0)
@@ -180,6 +160,21 @@ def resetdb(update=None, context=None):
     resetqns()
     resetqr()
 
+
+def resetdb(update=None, context=None):
+    msg = context.bot.sendMessage(update.effective_chat.id, "Hold on...")
+    cur.execute(f'''
+    DELETE FROM house;
+    UPDATE og SET chat_id = NULL, points = 0;
+    DELETE FROM member;
+    DELETE FROM queue;
+    UPDATE quiz_og SET attempts = 0, unlocked = FALSE, completed = FALSE;
+    UPDATE riddle_og SET unlocked = FALSE, completed = FALSE, attempts = 0;
+    UPDATE game_og SET unlocked = FALSE, completed = FALSE, first = TRUE;
+    UPDATE point_og SET unlocked = FALSE;
+    INSERT INTO member (chat_id, perms) VALUES ({ic1_id}, 3), ({ic2_id}, 3), ({ic3_id}, 3), ({ic4_id}, 3);
+    ''')
+    con.commit()
     msg.edit_text("Reset Successful!")
 
 
