@@ -675,7 +675,7 @@ def button(update, context):
             [[InlineKeyboardButton('Back', callback_data='mainmenu')]])
         queue = getqueueforgame(station_id)
         og, house, priority = queue[0]
-        clearqueue(og, house, station_id, context)
+        clearqueue(og, house, station_id, context)  # TODO: FIX THIS
         [points, reward, og_chat, house_name] = executescript(f'''
             UPDATE game_og SET completed = TRUE, first = FALSE WHERE game_id = {station_id} AND og_id = {og} AND house_id = {house};
             UPDATE og o SET points = o.points + g.points FROM game g, house h WHERE g.id = {station_id} AND o.id = {og} AND o.house_id = {house} AND h.id = {house}
@@ -992,7 +992,7 @@ def confirmans(update, context):
     unlocked, completed, attempts = getogqr(og_id, house_id, cat, id)
     if not unlocked or completed or attempts == 0 or original_msg.from_user.id != context.bot.id or first_word not in ['Riddle', 'Quiz']:
         return
-    context.bot.edit_reply_markup(
+    context.bot.edit_message_reply_markup(
         chat_id, original_msg.message_id, reply_markup=None)
     keyboard = InlineKeyboardMarkup([[InlineKeyboardButton('Yes', callback_data='sendans.{}.{}'.format(
         id, getogfromgroup(chat_id))), InlineKeyboardButton('No', callback_data='{}{}'.format(cat, id))]])
