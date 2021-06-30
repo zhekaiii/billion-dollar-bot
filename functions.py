@@ -522,8 +522,8 @@ def button(update, context):
         elif completed:
             mainmenu(update, context, message_id)
             return
-        markup = [[InlineKeyboardButton('Main Menu', callback_data='mainmenu'), InlineKeyboardButton(
-            buttontext[cat], callback_data=table[cat])]]
+        markup = InlineKeyboardMarkup([[InlineKeyboardButton('Main Menu', callback_data='mainmenu'), InlineKeyboardButton(
+            buttontext[cat], callback_data=table[cat])]])
         if not unlocked or attempts == 0:
             context.bot.edit_message_text(
                 text, chat_id, message_id, reply_markup=markup)
@@ -536,7 +536,6 @@ def button(update, context):
                 SELECT points FROM {table[cat]} WHERE id = {id}
             ) WHERE id = {og_id} AND house_id = {house_id}
         ''', True)
-        markup.append()
         context.bot.edit_message_text(
             f'{ans} is correct! ✅\nYou now have {points} points!', chat_id, message_id, reply_markup=markup)
     elif callback_data.startswith('wrong'):
@@ -552,8 +551,8 @@ def button(update, context):
         elif completed:
             mainmenu(update, context, message_id)
             return
-        markup = [[InlineKeyboardButton('Main Menu', callback_data='mainmenu'), InlineKeyboardButton(
-            buttontext[cat], callback_data=table[cat])]]
+        markup = InlineKeyboardMarkup([[InlineKeyboardButton('Main Menu', callback_data='mainmenu'), InlineKeyboardButton(
+            buttontext[cat], callback_data=table[cat])]])
         if not unlocked or attempts == 0:
             context.bot.edit_message_text(
                 text, chat_id, message_id, reply_markup=markup)
