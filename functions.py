@@ -530,7 +530,7 @@ def button(update, context):
         ans = callback_data.split('.')[2]
         [[points]] = executescript(f'''
             UPDATE {table[cat]}_og SET completed = TRUE
-            WHERE id = {og_id} AND house_id = {house_id} AND {table[cat]}_id = {id}
+            WHERE og_id = {og_id} AND house_id = {house_id} AND {table[cat]}_id = {id}
             RETURNING points;
             UPDATE og SET points = points + (
                 SELECT points FROM {table[cat]} WHERE id = {id}
