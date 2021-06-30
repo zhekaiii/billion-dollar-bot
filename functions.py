@@ -557,7 +557,7 @@ def button(update, context):
             context.bot.edit_message_text(
                 text, chat_id, message_id, reply_markup=markup)
         executescript(f'''
-            UPDATE {table[cat]}_og SET attempts = attempts - 1
+            UPDATE {table[cat]}_og SET attempts = attempts - 1 WHERE {table[cat]}_id = {id} AND og_id = {og_id} AND house_id = {house_id}
         ''')
         ans = callback_data.split('.')[2]
         context.bot.edit_message_text(f'{ans} is wrong! 🙅🏻' + (
