@@ -612,7 +612,7 @@ def button(update, context):
             UPDATE riddle_og SET completed = TRUE WHERE riddle_id = {id} AND og_id = {answering_og_id} AND house_id = {answering_house_id};
             UPDATE og o SET points = o.points + r.points FROM riddle r WHERE r.id = {id}
             AND o.id = {answering_og_id} AND o.house_id = {answering_house_id} RETURNING o.points, r.points;
-        ''', True)
+        ''', True)[0]
         context.bot.edit_message_text(
             original_text + '\nAnswer accepted!', chat_id, message_id)
         mainmenu(update, context)
