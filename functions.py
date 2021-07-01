@@ -173,7 +173,8 @@ def mainmenu(update, context, message_id=None):  # Done?
         )
         text = f'Hello, {game_title} Master {full_name(update.effective_user)}. What would you like to do?'
     else:  # Head
-        markup = []
+        markup = [[InlineKeyboardButton("Points by House", callback_data="disphouse"),
+                   InlineKeyboardButton("Points in Descending Order", callback_data="dispdesc")]]
         temp = []
         for og_id, house_id, house_name in gethouses():
             temp.append(InlineKeyboardButton(
@@ -778,6 +779,24 @@ def button(update, context):
         queue_game(og_id, house_id, game_id, None, chat_id, context.bot)
         context.bot.edit_message_text(
             f'Queued for {getgametitle(game_id)}!', chat_id, message_id, reply_markup=InlineKeyboardMarkup(markup))
+    elif callback_data.startswith('disp'):
+        house = callback_data == 'disphouse'
+        pointslist = executescript(f"""
+            SELECT og.id, house.name, og.name, points
+            FROM og
+            LEFT JOIN house ON (house.id = house_id)
+            ORDER BY {'house.id, og.id' if house else 'points DESC'}
+        """, True)
+        txt = ""
+        for i, row in enumerate(pointslist):
+            og_id, house_name, og_name, points = row
+            if i % 6 == 0:
+                txt += "\n"
+                if house:
+                    txt += f"<b><u>House of {house_name}</u></b>\n"
+            txt += f"{og_name if og_name else f'{house_name} {og_id}'}: {points} points\n"
+        context.bot.edit_message_text(txt, chat_id, message_id, reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("Main Menu", callback_data="mainmenu")]]), parse_mode=ParseMode.HTML)
 
 
 def decode_qr(update, context):
