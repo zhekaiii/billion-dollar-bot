@@ -567,7 +567,7 @@ def button(update, context):
         og_markup = InlineKeyboardMarkup([[InlineKeyboardButton(
             'Riddles', callback_data='riddle'), InlineKeyboardButton('Main Menu', callback_data='mainmenu')]])
         id = int(callback_data.split('.')[1])
-        answer = '.'.join(callback_data.split('.')[1:-1])
+        answer = update.callback_query.message.reply_to_message.text
         unlocked, completed, attempts = getogqr(og_id, house_id, 'r', id)
         if attempts <= 0:
             context.bot.edit_message_text(
@@ -1012,9 +1012,9 @@ def confirmans(update, context):
     context.bot.edit_message_reply_markup(
         chat_id, original_msg.message_id, reply_markup=None)
     keyboard = InlineKeyboardMarkup([[InlineKeyboardButton(
-        'Yes', callback_data=f'sendans.{id}.{original_msg}'), InlineKeyboardButton('No', callback_data=f'{cat}{id}')]])
-    context.bot.sendMessage(
-        chat_id, f'Confirm answer for {first_word} {id}:\n{update.message.text}', reply_markup=keyboard)
+        'Yes', callback_data=f'''sendans.{id}'''), InlineKeyboardButton('No', callback_data=f'''{cat}{id}''')]])
+    update.message.reply_text(
+        f'Confirm answer for {first_word} {id}:\n{update.message.text}', reply_markup=keyboard)
 
 
 def full_name(effective_user):
