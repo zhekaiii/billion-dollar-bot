@@ -842,6 +842,8 @@ def decode_qr(update, context):
                 'file': f.getvalue()
             }
         )
+        if response.json()[0]['symbol'][0]['error'] != None:
+            raise NameError("Fail")
         decoded = b64decode(
             response.json()[0]['symbol'][0]['data']).decode("utf-8")
         f.close()
@@ -855,7 +857,6 @@ def decode_qr(update, context):
             unlockquiz(int(decoded[5:]), og_id, house_id,
                        update.effective_user, context.bot)
         elif decoded.startswith('+'):
-            print(decoded[1:])
             unlockpts(int(decoded[1:]), og_id, house_id,
                       update.effective_user, context.bot)
         elif decoded.startswith('GAME'):
@@ -863,8 +864,7 @@ def decode_qr(update, context):
                        update.effective_user, context.bot)
         else:
             1/0
-    except Exception as e:
-        logger.warning(e)
+    except NameError:
         fun_text = [
             'Don\'t know how to take picture properly is it?',
             'Your phototaking skills need some work.',
@@ -875,12 +875,20 @@ def decode_qr(update, context):
             'A primary school kid can take better pictures than you.',
             'I guess I\'m just picky.',
             'Because you can\'t take pictures properly, -100 Favour Points! (Just kidding)',
-            'Did you scan a SafeEntry QR code by mistake?',
             'I didn\'t ask for irrelevant pictures.',
             'Trash.'
         ]
         msg.edit_text(
             f'Unable to detect valid QR code. {choice(fun_text)} Please try again.')
+        return
+    except ZeroDivisionError:
+        msg.edit_text(
+            'Did you scan a SafeEntry QR code by mistake?')
+        return
+    except Exception as e:
+        logger.warning(e)
+        msg.edit_text(
+            e)
         return
     msg.delete()
 
@@ -965,7 +973,7 @@ def queue_game(og_id, house_id, game_id, game, og_chat, bot):  # done
     if q == 1:
         bot.sendMessage(og_chat, f'You have been queued for {game_name}!')
         # only get the OGs actually queuing
-        queue = list(filter(lambda x: x[1] <= 1, getqueueforgame(game_id)))
+        queue = list(filter(lambda x: x[2] <= 1, getqueueforgame(game_id)))
         if len(queue) == 0:
             text = f'There are no OGs queued in front of you. Please head to {location} immediately!'
             notifysm(og_id, house_id, game_id, bot)
