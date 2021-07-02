@@ -819,9 +819,11 @@ def decode_qr(update, context):
             return
         q = getqueueforog(og_id, house_id)
         if q and q[0][1] <= 1:
-            msg.edit_text(
-                'Your OG is queueing for a station game. You cannot scan QR codes!')
-            return
+            gq = getqueueforgame(q[0][0])
+            if gq[0][0] == og_id and gq[0][1] == house_id:
+                msg.edit_text(
+                    'Your OG is up next for a station game. You cannot scan QR codes!')
+                return
     if update.message.photo:
         id_img = update.message.photo[-1].file_id
     else:
@@ -853,7 +855,8 @@ def decode_qr(update, context):
             unlockquiz(int(decoded[5:]), og_id, house_id,
                        update.effective_user, context.bot)
         elif decoded.startswith('+'):
-            unlockpts(int(decoded[1]), og_id, house_id,
+            print(decoded[1:])
+            unlockpts(int(decoded[1:]), og_id, house_id,
                       update.effective_user, context.bot)
         elif decoded.startswith('GAME'):
             unlockgame(int(decoded[5:]), og_id, house_id,
@@ -884,8 +887,8 @@ def decode_qr(update, context):
 
 def addpts(og_id, house_id, amt):  # done
     p = executescript(
-        f'UPDATE OG SET points = CASE WHEN points + {amt} > 0 THEN points + {amt} ELSE 0 END WHERE id = {og_id} AND house_id = {house_id} RETURNING points')
-    return p[0]
+        f'UPDATE OG SET points = CASE WHEN points + {amt} > 0 THEN points + {amt} ELSE 0 END WHERE id = {og_id} AND house_id = {house_id} RETURNING points', True)
+    return p[0][0]
 
 
 def unlockriddle(riddle_id, og_id, house_id, user, bot):  # done
