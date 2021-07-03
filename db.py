@@ -161,6 +161,10 @@ def seeddb():
     resetqr()
 
 
+def un():
+    con.rollback()
+
+
 def resetdb(update=None, context=None):
     msg = context.bot.sendMessage(update.effective_chat.id, "Hold on...")
     cur.execute(f'''

@@ -21,6 +21,10 @@ from db import *
 from pybot import test, ic1_id, ic2_id, ic3_id, ic4_id, logger
 
 
+def unstuck(update, context):
+    un()
+
+
 def help(update, context):
     # TODO: Help text for Station Masters
     chat_id = update.effective_chat.id
