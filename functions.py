@@ -597,7 +597,7 @@ def button(update, context):
         else:
             # for testing purposes
             context.bot.sendMessage(
-                ic1_id, ans, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+                ic2_id, ans, reply_markup=keyboard, parse_mode=ParseMode.HTML)
             # context.bot.sendMessage(
             #     ic3_id, ans, reply_markup=keyboard, parse_mode=ParseMode.HTML)
             #context.bot.sendMessage(ic4_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML)
