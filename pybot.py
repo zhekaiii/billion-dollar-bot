@@ -65,7 +65,7 @@ def main():
     dp.add_handler(CommandHandler('unlock', unlockall))
     dp.add_handler(CommandHandler('sm', sm))
     dp.add_handler(CommandHandler('head', head))
-    dp.add_handler(commandhandler('unstuck, unstuck'))
+    dp.add_handler(CommandHandler('unstuck', unstuck))
 
     dp.add_error_handler(error)
 
