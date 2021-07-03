@@ -385,7 +385,7 @@ def gethouses():
 
 
 def getgames():
-    cur.execute('SELECT id, title FROM game')
+    cur.execute('SELECT id, title FROM game ORDER BY id')
     return cur.fetchall()
 
 
