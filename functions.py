@@ -125,6 +125,7 @@ def register(update, context):
                     temp = []
         keyboard = InlineKeyboardMarkup(markup)
     context.bot.sendMessage(chat_id, text, reply_markup=keyboard)
+    # hello
 
 
 def mainmenu(update, context, message_id=None):  # Done?
