@@ -162,6 +162,8 @@ def mainmenu(update, context, message_id=None):  # Done?
                     ]
                 )
                 text = f'Hello, {house_name} {og_id}. What would you like to do?'
+        else:
+            text = "You can only do this via PM!"
     elif not haveperms(user_id, 2):  # OGL or unregistered user
         text = 'You can only do that in your group chat!'
     elif not haveperms(user_id, 3):  # Station Master
@@ -337,19 +339,19 @@ def button(update, context):
                                 unlocked, completed, first = row
                             buttonemoji = '🔒' if not unlocked else ('✅' if cat == 'p' or completed else (
                                 '❌' if cat in 'rq' and attempts == 0 else ''))
-                        if cat == 'g':
-                            g = games.pop(0)
-                            temp.append(InlineKeyboardButton(
-                                f'{g[1]} {buttonemoji}', callback_data=f'{callback_data}.{g[0]}'))
-                            if i % 2:
-                                markup.append(temp)
-                                temp = []
-                        else:
-                            temp.append(InlineKeyboardButton(
-                                f'{i + 1} {buttonemoji}', callback_data=f'{callback_data}.{i + 1}'))
-                            if i % 5 == 4:
-                                markup.append(temp)
-                                temp = []
+                            if cat == 'g':
+                                g = games.pop(0)
+                                temp.append(InlineKeyboardButton(
+                                    f'{g[1]} {buttonemoji}', callback_data=f'{callback_data}.{g[0]}'))
+                                if i % 2:
+                                    markup.append(temp)
+                                    temp = []
+                            else:
+                                temp.append(InlineKeyboardButton(
+                                    f'{i + 1} {buttonemoji}', callback_data=f'{callback_data}.{i + 1}'))
+                                if i % 5 == 4:
+                                    markup.append(temp)
+                                    temp = []
                         text = f'Which {["station", "riddle", "quiz"][int(split[4]) - 1]}?'
                     else:
                         id = int(split[5])
@@ -357,7 +359,7 @@ def button(update, context):
                             unlocked, attempts = og_qr[id - 1], None
                             completed = unlocked
                         elif cat == 'g':
-                            [unlocked, completed], attempts = og_qr[id - 1], None
+                            [unlocked, completed, first], attempts = og_qr[id - 1], None
                         else:
                             unlocked, completed, attempts = og_qr[id - 1]
                         if len(split) == 6:
@@ -401,22 +403,27 @@ def button(update, context):
                                     clearqueue(og, house_id, id, context)
                                 executescript(f'''
                                 UPDATE {table}_og 
-                                SET unlocked = FALSE, first = TRUE
+                                SET unlocked = FALSE{", first = TRUE" if cat == "g" else ""}{", completed = FALSE" if cat != "p" else ""}
                                 WHERE og_id = {og} AND house_id = {house_id} AND {table}_id = {id}
                                 ''')
                                 context.bot.sendMessage(
                                     chat_id, f'{["Station", "Riddle", "Quiz"][int(split[4]) - 1]} {id} for {house_name} {og} locked!')
                             elif stuff == 'complete':
+                                context.bot.edit_message_text(
+                                    "Hold on...", chat_id, message_id)
                                 if unlocked and not completed:
                                     if cat == 'g':
                                         clearqueue(og, house_id, id, context)
-                                    executescript(f'''
+                                    [[rewards, points]] = executescript(f'''
                                         UPDATE {table}_og SET completed = TRUE WHERE og_id = {og} AND house_id = {house_id} AND {table}_id = {id};
-                                        UPDATE og SET points = points + (
-                                            SELECT points from {table} WHERE id = {id}
-                                        )
-                                        WHERE og_id = {og} AND house_id = {house_id};
-                                    ''')
+                                        WITH point_table AS (SELECT points as rewards from {table} WHERE id = {id})
+                                        UPDATE og SET points = points + point_table.rewards FROM point_table
+                                        WHERE id = {og} AND house_id = {house_id} RETURNING point_table.rewards, points;
+                                    ''', True)
+                                    what = getgametitle(id) if cat == 'g' else (
+                                        f'Riddle {id}' if cat == 'r' else f'Quiz {id}')
+                                    context.bot.sendMessage(
+                                        getogchatid(og, house_id), f'You completed {what} and received {rewards} Favour points! You now have {points} points!')
                                 context.bot.answer_callback_query(
                                     update.callback_query.id, f'{["Station", "Riddle", "Quiz"][int(split[4]) - 1]} {id} for {house_name} {og} completed!', show_alert=True)
                             else:  # + attempts
@@ -1044,9 +1051,10 @@ def clearqueue(og_id, house_id, game_id, context):  # TODO: LOOK AT THIS AGAIN
         f'DELETE FROM Queue WHERE og_id = {og_id} AND house_id = {house_id} AND game_id = {game_id} RETURNING *', True)
     if deleted == None:
         return
+    og_chat = getogchatid(og_id, house_id)
     location, game_name, _ = getgame(game_id)
-    queue_game(og_id, house_id, None, None,
-               getogchatid(og_id, house_id), context.bot)
+    queue_game(og_id, house_id, None, None, context.bot)
+
     queue = getqueueforgame(game_id)
     if len(queue) and queue[0][2] == 1:
         context.bot.sendMessage(getogchatid(
@@ -1054,6 +1062,13 @@ def clearqueue(og_id, house_id, game_id, context):  # TODO: LOOK AT THIS AGAIN
     if len(queue) >= 1 and queue[1][2] == 1:
         context.bot.sendMessage(getogchatid(
             *queue[1][:2]), f'There is only one OG in front of you. Please slowly make your way to {location}!')
+    og_queue = getqueueforog(og_id, house_id)
+    if og_queue:
+        executescript(f'''
+            UPDATE game_og SET queue = 1 WHERE og_id = {og_id} AND house_id = {house_id}
+        ''')
+    context.bot.sendMessage(
+        og_chat, f"You have been queued for {getgametitle(game_id)}")
 
 
 def confirmans(update, context):

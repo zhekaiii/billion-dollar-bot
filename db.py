@@ -275,8 +275,9 @@ def executescript(script, returning=False):
         con.commit()
         if returning:
             return cur.fetchall()
-    except:
+    except Exception as e:
         con.rollback()
+        print(e)
         return None
 
 
