@@ -270,10 +270,14 @@ def resetqr(a=None, b=None):
 
 
 def executescript(script, returning=False):
-    cur.execute(script)
-    con.commit()
-    if returning:
-        return cur.fetchall()
+    try:
+        cur.execute(script)
+        con.commit()
+        if returning:
+            return cur.fetchall()
+    except:
+        con.rollback()
+        return None
 
 
 def getogfromperson(chat_id):

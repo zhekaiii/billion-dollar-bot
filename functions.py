@@ -314,38 +314,60 @@ def button(update, context):
                         [InlineKeyboardButton(
                             'Riddles', callback_data=f'{callback_data}.2')],
                         [InlineKeyboardButton(
-                            'Quizzes', callback_data=f'{callback_data}.3')]
+                            'Quizzes', callback_data=f'{callback_data}.3')],
+                        [InlineKeyboardButton(
+                            'Points', callback_data=f'{callback_data}.4')]
                     ]
                 else:
                     cat = 'g' if split[4] == '1' else (
-                        'r' if split[4] == '2' else 'q')
+                        'r' if split[4] == '2' else ('q' if split[4] == 3 else 'p'))
                     table = 'quiz' if cat == 'q' else (
                         'riddle' if cat == 'r' else ('game' if cat == 'g' else 'point'))
+                    if cat == 'g':
+                        games = getgames()
+                    og_qr = getogqr(og, house_id, cat)
                     if len(split) == 5:
-                        for i in range(3 if cat == 'q' else 2):
-                            temp = []
-                            for j in range(1, 6):
-                                num = i * 5 + j
-                                temp.append(InlineKeyboardButton(
-                                    f'{num}', callback_data=f'{callback_data}.{num}'))
-                            markup.append(temp)
+                        temp = []
+                        for i, row in enumerate(og_qr):
+                            if cat in 'rq':
+                                unlocked, completed, attempts = row
+                            elif cat == 'p':
+                                unlocked = row
+                            else:
+                                unlocked, completed, first = row
+                            buttonemoji = '🔒' if not unlocked else ('✅' if cat == 'p' or completed else (
+                                '❌' if cat in 'rq' and attempts == 0 else ''))
+                        if cat == 'g':
+                            g = games.pop(0)
+                            temp.append(InlineKeyboardButton(
+                                f'{g[1]} {buttonemoji}', callback_data=f'{callback_data}.{g[0]}'))
+                            if i % 2:
+                                markup.append(temp)
+                                temp = []
+                        else:
+                            temp.append(InlineKeyboardButton(
+                                f'{i + 1} {buttonemoji}', callback_data=f'{callback_data}.{i + 1}'))
+                            if i % 5 == 4:
+                                markup.append(temp)
+                                temp = []
                         text = f'Which {["station", "riddle", "quiz"][int(split[4]) - 1]}?'
                     else:
                         id = int(split[5])
-                        if cat in 'gp':
-                            [unlocked, completed], attempts = getogqr(
-                                og, house_id, cat, id), None
+                        if cat == 'p':
+                            unlocked, attempts = og_qr[id - 1], None
+                            completed = unlocked
+                        elif cat == 'g':
+                            [unlocked, completed], attempts = og_qr[id - 1], None
                         else:
-                            unlocked, completed, attempts = getogqr(
-                                og, house_id, cat, id)
+                            unlocked, completed, attempts = og_qr[id - 1]
                         if len(split) == 6:
-                            text = f'What would you like to do for {["Station", "Riddle", "Quiz"][int(split[4]) - 1]} {id}? '
+                            text = f'What would you like to do for {["Station", "Riddle", "Quiz", "Point"][int(split[4]) - 1]} {id}? '
                             if not unlocked:
                                 text += 'It is locked.'
                                 markup.append([InlineKeyboardButton(
                                     'Unlock', callback_data=f'{callback_data}.unlock')])
                             elif completed:  # unlocked and completed
-                                text += 'It has been completed.'
+                                text += f'It has been {"completed" if cat != "p" else "unlocked"}.'
                             else:  # unlocked and not completed
                                 if attempts is not None:
                                     text += f'{attempts} attempt{"s" if attempts > 1 else ""} remaining.'
@@ -371,12 +393,15 @@ def button(update, context):
                                 elif cat == 'q':
                                     unlockquiz(id, og, house_id,
                                                user, context.bot)
+                                else:
+                                    unlockpts(id, og, house_id,
+                                              user, context.bot)
                             elif stuff == 'lock':
                                 if cat == 'g':
                                     clearqueue(og, house_id, id, context)
                                 executescript(f'''
                                 UPDATE {table}_og 
-                                SET unlocked = FALSE
+                                SET unlocked = FALSE, first = TRUE
                                 WHERE og_id = {og} AND house_id = {house_id} AND {table}_id = {id}
                                 ''')
                                 context.bot.sendMessage(
@@ -764,7 +789,7 @@ def button(update, context):
         if own_queue:  # if your queue has something
             if own_queue[0][0] == id:  # you are queued for that station
                 # if priority != 0 means you're queuing for it but not playing it
-                if own_queue[0][1] != 0:
+                if own_queue[0][1] != 0 and not first:
                     markup[1].append(InlineKeyboardButton(
                         'Unqueue', callback_data='unqueue'))
         else:  # if your queue has nothing so if it's unlocked you failed it before
@@ -804,7 +829,49 @@ def button(update, context):
             [[InlineKeyboardButton("Main Menu", callback_data="mainmenu")]]), parse_mode=ParseMode.HTML)
 
 
-def decode_qr(update, context):
+def decodeforqr(message):
+    return b64decode(message).decode("utf-8")
+
+
+def sendcode(update, context):
+    chat_id = update.message.chat_id
+    message = update.message.text.split(" ")[1]
+    if message == "":
+        context.bot.sendMessage(
+            chat_id, "Incorrect format. If the QR code message is ABCDE, type /decode ABCDE.")
+        return
+    try:
+        decoded = decodeforqr(message)
+    except:
+        decoded = None
+    decode_qr(update, context, decoded)
+
+
+def sendpic(update, context):
+    if update.message.photo:
+        id_img = update.message.photo[-1].file_id
+    else:
+        return
+
+    foto = context.bot.getFile(id_img)
+
+    new_file = context.bot.get_file(foto.file_id)
+    f = io.BytesIO()
+    new_file.download(out=f)
+
+    response = requests.post(
+        'http://api.qrserver.com/v1/read-qr-code/?file',
+        files={
+            'file': f.getvalue()
+        }
+    )
+    decoded = response.json()[0]['symbol'][0]['error'] or decodeforqr(
+        response.json()[0]['symbol'][0]['data'])
+    f.close()
+    decode_qr(update, context, decoded)
+
+
+def decode_qr(update, context, decoded):
     chat_id = update.message.chat_id
     og = getogfromperson(chat_id)
     og_id, house_id, *_ = [None, None, None] if og is None else og
@@ -829,32 +896,10 @@ def decode_qr(update, context):
                 msg.edit_text(
                     'Your OG is up next for a station game. You cannot scan QR codes!')
                 return
-    if update.message.photo:
-        id_img = update.message.photo[-1].file_id
-    else:
-        return
-
-    foto = context.bot.getFile(id_img)
-
-    new_file = context.bot.get_file(foto.file_id)
-    f = io.BytesIO()
-    new_file.download(out=f)
 
     try:
-        response = requests.post(
-            'http://api.qrserver.com/v1/read-qr-code/?file',
-            files={
-                'file': f.getvalue()
-            }
-        )
-        if response.json()[0]['symbol'][0]['error'] != None:
+        if decoded == None:
             raise NameError("Fail")
-        decoded = b64decode(
-            response.json()[0]['symbol'][0]['data']).decode("utf-8")
-        f.close()
-        if update.message.caption == '/test':
-            msg.edit_text(decoded)
-            return
         elif decoded.startswith('RIDDLE'):
             unlockriddle(int(decoded[7:]), og_id, house_id,
                          update.effective_user, context.bot)
@@ -994,9 +1039,11 @@ def queue_game(og_id, house_id, game_id, game, og_chat, bot):  # done
     bot.sendMessage(og_chat, text)
 
 
-def clearqueue(og_id, house_id, game_id, context):  # Done
-    executescript(
-        f'DELETE FROM Queue WHERE og_id = {og_id} AND house_id = {house_id} AND game_id = {game_id}')
+def clearqueue(og_id, house_id, game_id, context):  # TODO: LOOK AT THIS AGAIN
+    deleted = executescript(
+        f'DELETE FROM Queue WHERE og_id = {og_id} AND house_id = {house_id} AND game_id = {game_id} RETURNING *', True)
+    if deleted == None:
+        return
     location, game_name, _ = getgame(game_id)
     queue_game(og_id, house_id, None, None,
                getogchatid(og_id, house_id), context.bot)
