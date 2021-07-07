@@ -167,16 +167,16 @@ def un():
 
 def resetdb(update=None, context=None):
     msg = context.bot.sendMessage(update.effective_chat.id, "Hold on...")
+    # DELETE FROM member;
     cur.execute(f'''
     UPDATE og SET chat_id = NULL, points = 0;
-    DELETE FROM member;
     DELETE FROM queue;
     UPDATE quiz_og SET attempts = 0, unlocked = FALSE, completed = FALSE;
     UPDATE riddle_og SET unlocked = FALSE, completed = FALSE, attempts = 0;
     UPDATE game_og SET unlocked = FALSE, completed = FALSE, first = TRUE;
     UPDATE point_og SET unlocked = FALSE;
-    INSERT INTO member (chat_id, perms) VALUES ({ic1_id}, 3), ({ic2_id}, 3), ({ic3_id}, 3), ({ic4_id}, 3);
     ''')
+    # INSERT INTO member (chat_id, perms) VALUES ({ic1_id}, 3), ({ic2_id}, 3), ({ic3_id}, 3), ({ic4_id}, 3);
     con.commit()
     msg.edit_text("Reset Successful!")
 
