@@ -1022,7 +1022,7 @@ def queue_game(og_id, house_id, game_id, game, og_chat, bot):  # done
     if game_id == None and game == None:
         if not own_queue:
             return
-        game_id = own_queue[0]
+        game_id = own_queue.pop(0)[0]
     if game == None:
         game = getgame(game_id)
     location, game_name, _ = game
