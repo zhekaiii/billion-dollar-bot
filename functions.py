@@ -737,7 +737,7 @@ def button(update, context):
         context.bot.sendMessage(
             og_chat, f'You failed to complete {station_title}... You can try again later by re-queuing for that station!')
         context.bot.edit_message_text(
-            f'{house} {og} failed!', chat_id, message_id, reply_markup=keyboard)
+            f'{gethousename(house)} {og} failed!', chat_id, message_id, reply_markup=keyboard)
     elif callback_data == 'game':  # games menu
         markup = [[InlineKeyboardButton('Back', callback_data='mainmenu')]]
         queue = getqueueforog(og_id, house_id)
