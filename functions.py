@@ -1053,7 +1053,7 @@ def clearqueue(og_id, house_id, game_id, context):  # TODO: LOOK AT THIS AGAIN
         return
     og_chat = getogchatid(og_id, house_id)
     location, game_name, _ = getgame(game_id)
-    queue_game(og_id, house_id, None, None, context.bot)
+    queue_game(og_id, house_id, None, None, og_chat, context.bot)
 
     queue = getqueueforgame(game_id)
     if len(queue) and queue[0][2] == 1:
