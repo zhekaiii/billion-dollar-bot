@@ -723,7 +723,7 @@ def button(update, context):
         context.bot.sendMessage(
             og_chat, f'You completed {station_title} and got {reward} Favour Points! You now have {points} points!')
         context.bot.edit_message_text(
-            f'{house} {og} passed!', chat_id, message_id, reply_markup=keyboard)
+            f'{gethousename(house)} {og} passed!', chat_id, message_id, reply_markup=keyboard)
     elif callback_data == 'fail':
         keyboard = InlineKeyboardMarkup(
             [[InlineKeyboardButton('Back', callback_data='mainmenu')]])
