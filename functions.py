@@ -883,26 +883,28 @@ def decode_qr(update, context, decoded):
     og = getogfromperson(chat_id)
     og_id, house_id, *_ = [None, None, None] if og is None else og
     msg = context.bot.sendMessage(chat_id, 'Loading...')
-    if update.message.caption != '/test':
-        if not haveperms(chat_id, 1):  # Level 0 cannot send QR codes
-            msg.edit_text('Only OGLs can send me QR codes!')
-            return
-        # Level 2 clearance or higher means not in any OG, so no need scan QR code
-        if haveperms(chat_id, 2):
+    if update.message.caption == '/test':
+        msg.edit_text(decoded)
+        return
+    if not haveperms(chat_id, 1):  # Level 0 cannot send QR codes
+        msg.edit_text('Only OGLs can send me QR codes!')
+        return
+    # Level 2 clearance or higher means not in any OG, so no need scan QR code
+    if haveperms(chat_id, 2):
+        msg.edit_text(
+            'You don\'t belong to any OGs! You don\'t need to send me QR codes!')
+        return
+    if getogchatid(og_id, house_id) == None:
+        msg.edit_text(
+            'Please send /start in your group chat to register the group chat into the database!')
+        return
+    q = getqueueforog(og_id, house_id)
+    if q and q[0][1] <= 1:
+        gq = getqueueforgame(q[0][0])
+        if gq[0][0] == og_id and gq[0][1] == house_id:
             msg.edit_text(
-                'You don\'t belong to any OGs! You don\'t need to send me QR codes!')
+                'Your OG is up next for a station game. You cannot scan QR codes!')
             return
-        if getogchatid(og_id, house_id) == None:
-            msg.edit_text(
-                'Please send /start in your group chat to register the group chat into the database!')
-            return
-        q = getqueueforog(og_id, house_id)
-        if q and q[0][1] <= 1:
-            gq = getqueueforgame(q[0][0])
-            if gq[0][0] == og_id and gq[0][1] == house_id:
-                msg.edit_text(
-                    'Your OG is up next for a station game. You cannot scan QR codes!')
-                return
 
     try:
         if decoded == None:
