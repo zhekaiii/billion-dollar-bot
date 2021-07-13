@@ -18,7 +18,7 @@ from datetime import datetime
 from random import shuffle, choice
 
 from db import *
-from pybot import test, ic1_id, ic2_id, ic3_id, ic4_id, logger
+from pybot import test, ic1_id, ic2_id, logger
 
 
 def unstuck(update, context):
@@ -630,14 +630,9 @@ def button(update, context):
         if id < 5:
             context.bot.sendMessage(
                 ic1_id, ans, reply_markup=keyboard, parse_mode=ParseMode.HTML)
-            #context.bot.sendMessage(ic2_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML)
         else:
-            # for testing purposes
             context.bot.sendMessage(
                 ic2_id, ans, reply_markup=keyboard, parse_mode=ParseMode.HTML)
-            # context.bot.sendMessage(
-            #     ic3_id, ans, reply_markup=keyboard, parse_mode=ParseMode.HTML)
-            #context.bot.sendMessage(ic4_id, ans, reply_markup = keyboard, parse_mode = ParseMode.HTML)
         context.bot.edit_message_text(
             'Answer sent! Please wait for the response.', chat_id, message_id, reply_markup=og_markup)
     elif callback_data.startswith('accept'):
@@ -710,10 +705,16 @@ def button(update, context):
         context.bot.edit_message_text(
             text, chat_id, message_id, reply_markup=InlineKeyboardMarkup(markup))
     elif callback_data == 'pass':
+        context.bot.edit_message_text("Please wait...", chat_id, message_id)
         keyboard = InlineKeyboardMarkup(
             [[InlineKeyboardButton('Back', callback_data='mainmenu')]])
-        queue = getqueueforgame(station_id)
-        og, house, priority = queue[0]
+        queue = getplayingog(station_id)
+        if queue is None:
+            context.bot.answer_callback_query(
+                update.callback_query.id, "No OG is currently playing", show_alert=True)
+            mainmenu(update, context, message_id)
+            return
+        og, house = queue
         clearqueue(og, house, station_id, context)
         [points, reward, og_chat, house_name] = executescript(f'''
             UPDATE game_og SET completed = TRUE, first = FALSE WHERE game_id = {station_id} AND og_id = {og} AND house_id = {house};
@@ -725,10 +726,16 @@ def button(update, context):
         context.bot.edit_message_text(
             f'{gethousename(house)} {og} passed!', chat_id, message_id, reply_markup=keyboard)
     elif callback_data == 'fail':
+        context.bot.edit_message_text("Please wait...", chat_id, message_id)
         keyboard = InlineKeyboardMarkup(
             [[InlineKeyboardButton('Back', callback_data='mainmenu')]])
-        queue = getqueueforgame(station_id)
-        og, house, priority = queue[0]
+        queue = getplayingog(station_id)
+        if queue is None:
+            context.bot.answer_callback_query(
+                update.callback_query.id, "No OG is currently playing", show_alert=True)
+            mainmenu(update, context, message_id)
+            return
+        og, house = queue
         [og_chat, house_name] = executescript(f'''
             UPDATE game_og SET first = FALSE WHERE og_id = {og} AND house_id = {house};
             SELECT chat_id, house.name FROM og JOIN house ON (og.house_id = house.id) WHERE og.id = {og} AND house_id = {house};
@@ -1022,7 +1029,7 @@ def unlockgame(game_id, og_id, house_id, user, bot):  # done
 def queue_game(og_id, house_id, game_id, game, og_chat, bot):  # done
     own_queue = getqueueforog(og_id, house_id)
     if game_id == None and game == None:
-        if not own_queue:
+        if not own_queue or own_queue[0][1] == 0:
             return
         game_id = own_queue.pop(0)[0]
     if game == None:
@@ -1061,16 +1068,16 @@ def clearqueue(og_id, house_id, game_id, context):  # TODO: LOOK AT THIS AGAIN
     if len(queue) and queue[0][2] == 1:
         context.bot.sendMessage(getogchatid(
             *queue[0][:2]), f'The previous OG is finished with the station {game_name}. Please make your way to {location} immediately!')
-    if len(queue) >= 1 and queue[1][2] == 1:
+    if len(queue) > 1 and queue[1][2] == 1:
         context.bot.sendMessage(getogchatid(
             *queue[1][:2]), f'There is only one OG in front of you. Please slowly make your way to {location}!')
     og_queue = getqueueforog(og_id, house_id)
-    if og_queue:
+    if og_queue and og_queue[0][1] == 2:
         executescript(f'''
-            UPDATE game_og SET queue = 1 WHERE og_id = {og_id} AND house_id = {house_id}
+            UPDATE queue SET queue = 1 WHERE og_id = {og_id} AND house_id = {house_id} AND game_id = {og_queue[0][0]}
         ''')
-    context.bot.sendMessage(
-        og_chat, f"You have been queued for {getgametitle(game_id)}")
+        context.bot.sendMessage(
+            og_chat, f"You have been queued for {getgametitle(game_id)}")
 
 
 def confirmans(update, context):

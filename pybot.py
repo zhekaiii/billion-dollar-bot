@@ -31,8 +31,6 @@ logger = logging.getLogger(__name__)
 
 ic1_id = 129464681  # chat_id of Zhekai
 ic2_id = 468173002  # chat_id of Jeremy
-ic3_id = 268748296  # chat_id of Brendan
-ic4_id = 1005321252  # chat_id of Qing Yi
 
 # database things
 con = psql.connect(DB_URL, sslmode='prefer' if test else 'require')

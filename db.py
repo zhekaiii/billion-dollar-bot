@@ -1,6 +1,6 @@
 import psycopg2 as psql
 import csv
-from pybot import ic1_id, ic2_id, ic3_id, ic4_id, cur, con, logger
+from pybot import ic1_id, ic2_id, cur, con, logger
 
 
 def dropdb():
@@ -153,7 +153,7 @@ def seeddb():
     for house_id in range(1, 7):
         for og in range(1, 7):
             txt += f"""INSERT INTO og (id, house_id) VALUES ({og}, {house_id});"""
-    for i in [ic1_id, ic2_id, ic3_id, ic4_id]:
+    for i in [ic1_id, ic2_id]:
         txt += f'INSERT INTO member (chat_id, perms) VALUES ({i}, 3);'
     cur.execute(txt)
 
@@ -167,7 +167,6 @@ def un():
 
 def resetdb(update=None, context=None):
     msg = context.bot.sendMessage(update.effective_chat.id, "Hold on...")
-    # DELETE FROM member;
     cur.execute(f'''
     UPDATE og SET chat_id = NULL, points = 0;
     DELETE FROM queue;
@@ -176,7 +175,6 @@ def resetdb(update=None, context=None):
     UPDATE game_og SET unlocked = FALSE, completed = FALSE, first = TRUE;
     UPDATE point_og SET unlocked = FALSE;
     ''')
-    # INSERT INTO member (chat_id, perms) VALUES ({ic1_id}, 3), ({ic2_id}, 3), ({ic3_id}, 3), ({ic4_id}, 3);
     con.commit()
     msg.edit_text("Reset Successful!")
 
@@ -368,6 +366,18 @@ def getqueueforgame(game_id):  # gets the queue of a specific station game
         queue ASC,
         time ASC''')
     res = cur.fetchall()
+    return res
+
+
+def getplayingog(game_id):
+    cur.execute(f'''
+        SELECT
+            og_id, house_id
+        FROM queue
+        WHERE 
+            game_id = {game_id} AND queue = 0
+    ''')
+    res = cur.fetchone()
     return res
 
 
