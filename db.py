@@ -165,7 +165,30 @@ def un():
     con.rollback()
 
 
+def getstats(day: int):
+    houses = (1, 3, 4) if day == 1 else (
+        (2, 5, 6) if day == 2 else (1, 2, 3, 4, 5, 6))
+    cur.execute(f"""
+        SELECT
+            (SELECT COUNT(*) FROM riddle_og WHERE unlocked = TRUE AND house_id IN {houses}) AS unlocked_riddles,
+            (SELECT COUNT(*) FROM riddle_og WHERE completed = TRUE AND house_id IN {houses}) AS completed_riddles,
+            (SELECT COUNT(*) FROM quiz_og WHERE unlocked = TRUE AND house_id IN {houses}) AS unlocked_quizzes,
+            (SELECT COUNT(*) FROM quiz_og WHERE completed = TRUE AND house_id IN {houses}) AS completed_quizzes,
+            (SELECT COALESCE(SUM(attempts),0) FROM quiz_og WHERE house_id IN {houses}) AS quiz_attempts,
+            (SELECT COUNT(*) FROM game_og WHERE unlocked = TRUE AND house_id IN {houses}) AS unlocked_games,
+            (SELECT COUNT(*) FROM game_og WHERE completed = TRUE AND house_id IN {houses}) AS completed_games,
+            (SELECT COUNT(*) FROM game_og WHERE completed = TRUE AND first = TRUE AND house_id IN {houses}) AS first_try_games,
+            (SELECT COUNT(*) FROM point_og WHERE unlocked = TRUE AND house_id IN {houses}) AS unlocked_points,
+            (SELECT SUM(points) FROM og WHERE house_id IN {houses}) AS total_points,
+            (SELECT COUNT(*) FROM og WHERE house_id IN {houses}) AS og_count
+    """)
+    res = list(cur.fetchone())
+    return res
+
+
 def resetdb(update=None, context=None):
+    if update.effective_chat.id != ic1_id:
+        return
     msg = context.bot.sendMessage(update.effective_chat.id, "Hold on...")
     cur.execute(f'''
     UPDATE og SET chat_id = NULL, points = 0;

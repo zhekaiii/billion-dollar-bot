@@ -53,17 +53,14 @@ def main():
     dp.add_handler(CommandHandler('help', help))
     dp.add_handler(CommandHandler('senduserid', senduserid))
     dp.add_handler(CommandHandler('decode', sendcode))
+    dp.add_handler(CommandHandler('stats', stats))
     dp.add_handler(MessageHandler(Filters.photo, sendpic))
     dp.add_handler(MessageHandler(Filters.reply, confirmans))
     dp.add_handler(CallbackQueryHandler(button))
 
     # for debugging/testing purposes
 
-    # dp.add_handler(CommandHandler('test', resetqr))
     dp.add_handler(CommandHandler('reset', resetdb))
-    # dp.add_handler(CommandHandler('unlock', unlockall))
-    # dp.add_handler(CommandHandler('sm', sm))
-    # dp.add_handler(CommandHandler('head', head))
     dp.add_handler(CommandHandler('unstuck', unstuck))
 
     dp.add_error_handler(error)

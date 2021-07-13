@@ -567,7 +567,7 @@ def button(update, context):
                 text, chat_id, message_id, reply_markup=markup)
         ans = '.'.join(callback_data.split('.')[2:])
         [[points]] = executescript(f'''
-            UPDATE {table[cat]}_og SET completed = TRUE
+            UPDATE {table[cat]}_og SET completed = TRUE, attempts = attempts - 1
             WHERE og_id = {og_id} AND house_id = {house_id} AND {table[cat]}_id = {id};
             UPDATE og SET points = points + (
                 SELECT points FROM {table[cat]} WHERE id = {id}
@@ -717,7 +717,7 @@ def button(update, context):
         og, house = queue
         clearqueue(og, house, station_id, context)
         [points, reward, og_chat, house_name] = executescript(f'''
-            UPDATE game_og SET completed = TRUE, first = FALSE WHERE game_id = {station_id} AND og_id = {og} AND house_id = {house};
+            UPDATE game_og SET completed = TRUE WHERE game_id = {station_id} AND og_id = {og} AND house_id = {house};
             UPDATE og o SET points = o.points + g.points FROM game g, house h WHERE g.id = {station_id} AND o.id = {og} AND o.house_id = {house} AND h.id = {house}
             RETURNING o.points, g.points, o.chat_id, h.name
         ''', True)[0]
@@ -859,6 +859,28 @@ def sendcode(update, context):
     except:
         decoded = None
     decode_qr(update, context, decoded)
+
+
+def stats(update, context):
+    chat_id = update.message.chat_id
+    day = int(update.message.text.split(" ")[1])
+    unlocked_riddles, completed_riddles, unlocked_quizzes, completed_quizzes, quiz_attempts, unlocked_games, completed_games, first_try_games, unlocked_points, total_points, og_count = getstats(
+        day)
+    txt = 'The following statistics are averages.\n\n'
+    txt += f'Unlocked Riddles: {unlocked_riddles/og_count}/10\n'
+    txt += f'Completed Riddles: {completed_riddles/(0.01 * unlocked_riddles)}%\n' if unlocked_riddles > 0 else ''
+    txt += '\n'
+    txt += f'Unlocked Quizzes: {unlocked_quizzes/og_count}/15\n'
+    txt += f'Completed Quizzes: {completed_quizzes/(0.01 * unlocked_quizzes)}%\n' if unlocked_quizzes > 0 else ''
+    txt += f'Attempts per quiz: {(unlocked_quizzes * 2 - quiz_attempts)/unlocked_quizzes}\n' if unlocked_quizzes > 0 else ''
+    txt += '\n'
+    txt += f'Unlocked Games: {unlocked_games/og_count}/10\n'
+    txt += f'Completed Games: {completed_games/(0.01 * unlocked_games)}% ({first_try_games/og_count} on the first try)\n' if unlocked_games > 0 else ''
+    txt += '\n'
+    txt += f'Unlocked Free Points: {unlocked_points/og_count}/15\n\n'
+    txt += f'Points: {total_points/og_count}'
+
+    context.bot.sendMessage(chat_id, txt)
 
 
 def sendpic(update, context):
