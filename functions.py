@@ -861,24 +861,28 @@ def sendcode(update, context):
     decode_qr(update, context, decoded)
 
 
+def zkround(num):
+    return int(round(num, 2)) if round(num, 2) % 1 == 0 else round(num, 2)
+
+
 def stats(update, context):
     chat_id = update.message.chat_id
     day = int(update.message.text.split(" ")[1])
     unlocked_riddles, completed_riddles, unlocked_quizzes, completed_quizzes, quiz_attempts, unlocked_games, completed_games, first_try_games, unlocked_points, total_points, og_count = getstats(
         day)
     txt = 'The following statistics are averages.\n\n'
-    txt += f'Unlocked Riddles: {unlocked_riddles/og_count}/10\n'
-    txt += f'Completed Riddles: {completed_riddles/(0.01 * unlocked_riddles)}%\n' if unlocked_riddles > 0 else ''
+    txt += f'Unlocked Riddles: {zkround(unlocked_riddles/og_count)}/10\n'
+    txt += f'Completed Riddles: {zkround(completed_riddles/(0.01 * unlocked_riddles))}%\n' if unlocked_riddles > 0 else ''
     txt += '\n'
-    txt += f'Unlocked Quizzes: {unlocked_quizzes/og_count}/15\n'
-    txt += f'Completed Quizzes: {completed_quizzes/(0.01 * unlocked_quizzes)}%\n' if unlocked_quizzes > 0 else ''
-    txt += f'Attempts per quiz: {(unlocked_quizzes * 2 - quiz_attempts)/unlocked_quizzes}\n' if unlocked_quizzes > 0 else ''
+    txt += f'Unlocked Quizzes: {zkround(unlocked_quizzes/og_count)}/15\n'
+    txt += f'Completed Quizzes: {zkround(completed_quizzes/(0.01 * unlocked_quizzes))}%\n' if unlocked_quizzes > 0 else ''
+    txt += f'Attempts per quiz: {zkround((unlocked_quizzes * 2 - quiz_attempts)/unlocked_quizzes)}\n' if unlocked_quizzes > 0 else ''
     txt += '\n'
-    txt += f'Unlocked Games: {unlocked_games/og_count}/10\n'
-    txt += f'Completed Games: {completed_games/(0.01 * unlocked_games)}% ({first_try_games/og_count} on the first try)\n' if unlocked_games > 0 else ''
+    txt += f'Unlocked Games: {zkround(unlocked_games/og_count)}/10\n'
+    txt += f'Completed Games: {zkround(completed_games/(0.01 * unlocked_games))}% ({zkround(first_try_games/og_count)} on the first try)\n' if unlocked_games > 0 else ''
     txt += '\n'
-    txt += f'Unlocked Free Points: {unlocked_points/og_count}/15\n\n'
-    txt += f'Points: {total_points/og_count}'
+    txt += f'Unlocked Free Points: {zkround(unlocked_points/og_count)}/15\n\n'
+    txt += f'Points: {zkround(total_points/og_count)}'
 
     context.bot.sendMessage(chat_id, txt)
 
