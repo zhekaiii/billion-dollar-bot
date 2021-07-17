@@ -152,7 +152,7 @@ def mainmenu(update, context, message_id=None):  # Done?
                 keyboard = InlineKeyboardMarkup(
                     [
                         [InlineKeyboardButton(
-                            'Favour Points', callback_data='points')],
+                            'Points', callback_data='points')],
                         [InlineKeyboardButton(
                             'Station Games', callback_data='game')],
                         [InlineKeyboardButton(
@@ -280,7 +280,7 @@ def button(update, context):
             if action == 1:  # +/- Points
                 pts = getpoints(og, house_id)
                 if len(split) == 4:
-                    text = f'How many points? {house_name} {og} now has {pts} Favour Points.'
+                    text = f'How many points? {house_name} {og} now has {pts} Points.'
                     markup += [
                         [InlineKeyboardButton('-1', callback_data=f'{callback_data}.-1'), InlineKeyboardButton(
                             '+1', callback_data=f'{callback_data}.1')],
@@ -297,8 +297,8 @@ def button(update, context):
                     pts = 0 if pts < 0 else pts
                     addpts(og, house_id, amt)
                     context.bot.sendMessage(
-                        chat_id, f'{"" if amt < 0 else "+"}{amt} Favour Points for {house_name} {og}! They now have {pts} points!')
-                    text = f'How many points? {house_name} {og} now has {pts} Favour Points.'
+                        chat_id, f'{"" if amt < 0 else "+"}{amt} Points for {house_name} {og}! They now have {pts} points!')
+                    text = f'How many points? {house_name} {og} now has {pts} Points.'
                     markup += [
                         [InlineKeyboardButton('-1', callback_data=f'{".".join(split[:-1])}.-1'), InlineKeyboardButton(
                             '+1', callback_data=f'{".".join(split[:-1])}.1')],
@@ -423,7 +423,7 @@ def button(update, context):
                                     what = getgametitle(id) if cat == 'g' else (
                                         f'Riddle {id}' if cat == 'r' else f'Quiz {id}')
                                     context.bot.sendMessage(
-                                        getogchatid(og, house_id), f'You completed {what} and received {rewards} Favour points! You now have {points} points!')
+                                        getogchatid(og, house_id), f'You completed {what} and received {rewards} Points! You now have {points} points!')
                                 context.bot.answer_callback_query(
                                     update.callback_query.id, f'{["Station", "Riddle", "Quiz"][int(split[4]) - 1]} {id} for {house_name} {og} completed!', show_alert=True)
                             else:  # + attempts
@@ -445,7 +445,7 @@ def button(update, context):
             [[InlineKeyboardButton('Back', callback_data='mainmenu')]])
         pts = getpoints(og_id, house_id)
         context.bot.edit_message_text(
-            f'Your OG has {pts} Favour Points', chat_id, message_id, reply_markup=keyboard)
+            f'Your OG has {pts} Points', chat_id, message_id, reply_markup=keyboard)
     elif callback_data == 'riddle':  # riddle menu
         markup = [[InlineKeyboardButton('Back', callback_data='mainmenu')]]
         temp = []
@@ -649,7 +649,7 @@ def button(update, context):
             original_text + '\nAnswer accepted!', chat_id, message_id)
         mainmenu(update, context)
         context.bot.sendMessage(
-            og_chat, f'{getogname(answering_og_id, answering_house_id)}, your answer for Riddle {id} has been accepted! You gained {amt} Favour Points, you now have {points} points!')
+            og_chat, f'{getogname(answering_og_id, answering_house_id)}, your answer for Riddle {id} has been accepted! You gained {amt} Points, you now have {points} points!')
     elif callback_data.startswith('reject'):
         id = int(callback_data.split('.')[1])
         answering_og_id = int(callback_data.split('.')[2])
@@ -722,7 +722,7 @@ def button(update, context):
             RETURNING o.points, g.points, o.chat_id, h.name
         ''', True)[0]
         context.bot.sendMessage(
-            og_chat, f'You completed {station_title} and got {reward} Favour Points! You now have {points} points!')
+            og_chat, f'You completed {station_title} and got {reward} Points! You now have {points} points!')
         context.bot.edit_message_text(
             f'{gethousename(house)} {og} passed!', chat_id, message_id, reply_markup=keyboard)
     elif callback_data == 'fail':
@@ -962,7 +962,7 @@ def decode_qr(update, context, decoded):
             'Is the camera bad or is it just your skills?',
             'A primary school kid can take better pictures than you.',
             'I guess I\'m just picky.',
-            'Because you can\'t take pictures properly, -100 Favour Points! (Just kidding)',
+            'Because you can\'t take pictures properly, -100 Points! (Just kidding)',
             'I didn\'t ask for irrelevant pictures.',
             'Trash.'
         ]
@@ -1029,9 +1029,9 @@ def unlockpts(point_id, og_id, house_id, user, bot):  # done
     executescript(
         f'UPDATE point_og SET unlocked = TRUE WHERE og_id = {og_id} AND house_id = {house_id} AND point_id = {point_id}')
     bot.sendMessage(
-        user.id, f'You gained {amt} Favour Points! Your OG now has {pts} points.')
+        user.id, f'You gained {amt} Points! Your OG now has {pts} points.')
     bot.sendMessage(
-        og_chat, f'You gained {amt} Favour Points! Your OG now has {pts} points.')
+        og_chat, f'You gained {amt} Points! Your OG now has {pts} points.')
 
 
 def unlockgame(game_id, og_id, house_id, user, bot):  # done
